@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Macellaio Rewards - V21 Magnet</title>
+    <title>Macellaio Rewards - V22 Top Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         /* --- ESTILOS GERAIS --- */
@@ -38,7 +38,7 @@
         .status-pill { border: 1px solid var(--gold); color: var(--gold); padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; margin-bottom: 20px; background: rgba(0,0,0,0.8); }
         
         /* --- ROLETA --- */
-        #roleta-container { position: relative; width: 320px; height: 320px; margin-bottom: 60px; }
+        #roleta-container { position: relative; width: 320px; height: 320px; margin-bottom: 60px; margin-top: 20px; }
         
         #roleta-wrapper {
             width: 100%; height: 100%; border-radius: 50%; position: relative; overflow: hidden;
@@ -47,13 +47,19 @@
             z-index: 5;
         }
         
-        /* Ponteiro Amarelo (Fixo em Baixo 6h) */
+        /* CORREÇÃO: Ponteiro Amarelo no TOPO (12h) */
         #ponteiro { 
-            position: absolute; bottom: -25px; left: 50%; 
-            transform: translateX(-50%) rotate(180deg);
+            position: absolute; 
+            top: -25px; /* Fixado no topo */
+            left: 50%; 
+            transform: translateX(-50%); /* Removemos a rotação de 180deg */
             width: 0; height: 0; 
-            border-left: 25px solid transparent; border-right: 25px solid transparent; border-top: 50px solid var(--gold); 
-            z-index: 25; filter: drop-shadow(0 -4px 4px rgba(0,0,0,0.5)); 
+            /* Triângulo apontando para baixo */
+            border-left: 25px solid transparent; 
+            border-right: 25px solid transparent; 
+            border-top: 50px solid var(--gold); 
+            z-index: 25; 
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5)); 
         }
 
         .segmento { position: absolute; top: 0; right: 0; width: 50%; height: 50%; transform-origin: 0% 100%; overflow: hidden; }
@@ -61,7 +67,7 @@
         .seg-conteudo span { display: block; width: 80px; line-height: 1.1; }
         #centro-roleta { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background: #222; border: 4px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; }
 
-        /* --- VISUAIS DO DARDO (Ajustado Posição) --- */
+        /* --- VISUAIS DO DARDO (Trajetória ajustada para o Topo) --- */
         #projectile-dart {
             position: absolute; 
             bottom: -150px; left: 50%; 
@@ -72,10 +78,11 @@
             pointer-events: none; 
             filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
-        /* Ajuste para bater mais para dentro (bottom: 75px) */
+        
+        /* Animação: Dardo voa de baixo até o TOPO da roleta */
         @keyframes dartTrajectory {
             0% { bottom: -150px; transform: translateX(-50%) rotate(180deg) scale(1.2); opacity: 1; }
-            100% { bottom: 75px; transform: translateX(-50%) rotate(180deg) scale(0.9); opacity: 1; } 
+            100% { bottom: 280px; transform: translateX(-50%) rotate(180deg) scale(0.9); opacity: 1; } /* 280px ~ Topo */
         }
         .flying-dart-anim { animation: dartTrajectory 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
 
@@ -88,6 +95,7 @@
         #dardo-preso::after {
             content: '🎯'; font-size: 45px; 
             position: absolute; top: -22px; left: -22px;
+            /* Aponta para o centro */
             transform: rotate(180deg);
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
@@ -142,7 +150,7 @@
         <button id="btn-arremessar" class="btn-gold btn-throw hidden" onclick="arremessarDardo()">ATIRAR DARDO!</button>
 
         <div id="msg-resultado" class="hidden" style="margin-top:20px; text-align:center;">
-            <p style="color:#aaa; font-size:0.9rem; margin-bottom:5px;">O peso parou em:</p>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:5px;">O dardo marcou:</p>
             <h3 id="txt-premio-atual" style="color:var(--gold); font-size:1.5rem; margin:0 0 20px 0;">...</h3>
             <button id="btn-resgatar-home" class="btn-gold" style="padding:12px 30px; font-size:0.9rem; width:auto;" onclick="irResgate()">RESGATAR</button>
             <button id="btn-girar-dnv" class="btn-outline" style="margin-left:10px;" onclick="resetarJogo()">GIRAR DE NOVO</button>
@@ -176,7 +184,7 @@
             <div id="resultado-link" class="link-result"></div>
         </div>
         <div class="admin-section">
-            <h3>Prêmios (Peso)</h3>
+            <h3>Prêmios & Pesos</h3>
             <p style="font-size:0.7rem; color:#aaa;">Probabilidade se aplica a cada giro individualmente.</p>
             <div id="lista-premios"></div>
             <div style="margin-top:10px; display:flex; gap:10px;">
@@ -242,7 +250,7 @@
     // Sync vars
     let flyingFrames = 0;
 
-    try { const stored = localStorage.getItem('macellaio_premios_v21'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
+    try { const stored = localStorage.getItem('macellaio_premios_v22'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
 
     window.onload = function() {
         const params = new URLSearchParams(window.location.search);
@@ -256,7 +264,7 @@
     };
 
     /* ----------------------------------------------------------------
-       3. LÓGICA DO JOGO
+       3. LÓGICA DO JOGO (FÍSICA 12h TOPO)
        ---------------------------------------------------------------- */
     function iniciarGiroMotor() {
         if(estado.giros >= estado.maxGiros) return;
@@ -272,8 +280,7 @@
         const projectile = document.getElementById('projectile-dart'); 
         projectile.style.display = 'block'; projectile.classList.add('flying-dart-anim');
         
-        // --- SORTEIO PONDERADO REAL ---
-        // Este sorteio é feito AGORA e respeitado até o final
+        // --- SORTEIO PONDERADO ---
         let totalPeso = premiosAtuais.reduce((s, p) => s + (parseInt(p.peso)||0), 0);
         let r = Math.random() * totalPeso;
         let cursor = 0; targetPrizeIndex = 0;
@@ -287,19 +294,22 @@
             targetPrizeIndex = Math.floor(Math.random() * premiosAtuais.length);
         }
 
-        // CÁLCULO DE ALVO (Alinhar 6h)
+        // CÁLCULO DE ALVO (Alinhar 12h - TOPO - Ângulo 360/0)
         const segArc = 360 / premiosAtuais.length; 
         const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
-        // O alvo de rotação da roleta para que esse segmento esteja em baixo (180):
-        let targetRotation = 180 - centerSegAngle;
+        
+        // O alvo de rotação da roleta para que esse segmento esteja no TOPO (0deg visual):
+        // Visual Rotation = (Local Segment Angle + Wheel Rotation) = 0 (ou 360)
+        // Wheel Rotation = 360 - Local Segment Angle
+        let targetRotation = 360 - centerSegAngle;
         
         const currentMod = rotationAngle % 360; 
         let diff = targetRotation - currentMod; 
         if (diff < 0) diff += 360; 
         
-        // Ajuste de velocidade para sincronizar com a animação CSS (350ms)
+        // Ajuste de velocidade (350ms ~ 22 frames)
         const framesToImpact = 22; 
-        const distanceNeeded = diff + 360; // 1 volta extra
+        const distanceNeeded = diff + 360; 
         velocity = distanceNeeded / framesToImpact; 
         
         flyingFrames = 22;
@@ -313,12 +323,14 @@
         const dardoPreso = document.getElementById('dardo-preso'); 
         dardoPreso.style.display = 'block';
         
-        // Cálculo do Ponto de Impacto (Agora garantido pela velocidade anterior)
-        // O dardo bateu em 180 (baixo). Onde isso é na roleta?
-        dartAttachedAngle = 180 - rotationAngle;
+        // Cálculo do Ponto de Impacto
+        // O dardo bateu no TOPO (360/0 deg). 
+        // A roleta está em 'rotationAngle'.
+        dartAttachedAngle = 360 - rotationAngle;
         
-        // VISUAL FIXO (Mais ao centro)
-        dardoPreso.style.transform = `rotate(${dartAttachedAngle}deg) translate(0, 110px)`;
+        // VISUAL FIXO (Mais próximo da borda para não cobrir texto)
+        // translate Y 145px (raio do container 160px - margem)
+        dardoPreso.style.transform = `rotate(${dartAttachedAngle}deg) translate(0, 145px)`;
     }
 
     function loopFisica() {
@@ -329,20 +341,23 @@
             rotationAngle += velocity;
         }
         else if (mode === 'FLYING') {
-            // Sincronizando impacto
             rotationAngle += velocity;
             flyingFrames--;
             if (flyingFrames <= 0) impactoDardo();
         }
         else if (mode === 'PENDULUM') {
-            // IMÃ MAGNÉTICO PARA 6H
+            // IMÃ MAGNÉTICO PARA 12H (TOPO)
             // O dardo está em (rotationAngle + dartAttachedAngle)
-            // O alvo é 180.
+            // O alvo é 360 (ou 0).
             const currentDartPos = (rotationAngle + dartAttachedAngle) % 360;
-            let diff = 180 - currentDartPos; 
-            if (diff > 180) diff -= 360; if (diff < -180) diff += 360;
+            let diff = 360 - currentDartPos; 
             
-            // Força Gravitacional Agressiva
+            // Corrige para o menor caminho (-180 a 180)
+            if (diff > 180) diff -= 360; 
+            if (diff < -180) diff += 360;
+            
+            // Força "Gravitacional" (Magnetic Lock) para o topo
+            // Usamos Math.sin para criar oscilação suave em torno do 0
             const gravityForce = 0.8 * Math.sin(diff * (Math.PI / 180)); 
             const friction = 0.985; 
             
@@ -351,7 +366,7 @@
             // Trava Magnética Final
             if (Math.abs(velocity) < 0.05 && Math.abs(diff) < 2.0) {
                 mode = 'FINISHED'; 
-                rotationAngle = 180 - dartAttachedAngle; // Snap exato
+                rotationAngle = 360 - dartAttachedAngle; // Snap exato no topo
                 finalizarJogo();
             }
         }
@@ -361,7 +376,7 @@
 
     function finalizarJogo() {
         cancelAnimationFrame(animFrame); playWin();
-        const premio = premiosAtuais[targetPrizeIndex]; // Vencedor já definido no arremesso
+        const premio = premiosAtuais[targetPrizeIndex]; 
         
         setTimeout(() => {
             estado.giros++;
@@ -391,7 +406,7 @@
     function adicionarPremio(){ saveM(); premiosAtuais.push({nome:"",cupom:"",peso:0,cor:CORES[premiosAtuais.length%CORES.length]}); renderAdminPremios(); }
     function rmP(i){ if(premiosAtuais.length<=2)return; if(confirm("Remover?")){ saveM(); premiosAtuais.splice(i,1); renderAdminPremios(); } }
     function saveM(){ premiosAtuais.forEach((p,i)=>{ const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value; const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value; const w=document.getElementById(`p-${i}`); if(w) p.peso=parseInt(w.value)||0; }); }
-    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_premios_v21',JSON.stringify(premiosAtuais)); alert("Salvo!"); location.reload(); }
+    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_premios_v22',JSON.stringify(premiosAtuais)); alert("Salvo!"); location.reload(); }
     function renderizarRoleta(){ const w=document.getElementById('roleta-wrapper'); const dardo = document.getElementById('dardo-preso'); w.innerHTML=''; w.appendChild(dardo); const tot=premiosAtuais.length; const arc=360/tot; premiosAtuais.forEach((p,i)=>{ const s=document.createElement('div'); s.className='segmento'; const r=i*arc; const sk=90-arc; s.style.transform=`rotate(${r}deg) skewY(-${sk}deg)`; s.style.backgroundColor=p.cor; const c=document.createElement('div'); c.className='seg-conteudo'; c.style.transform=`skewY(${sk}deg) rotate(${arc/2}deg)`; c.innerHTML=`<span>${p.nome}</span>`; s.appendChild(c); w.appendChild(s); }); }
     function irResgate(){ if(!estado.premioFinal)return; estado.resgatado=true; estado.dataResgate=new Date().toISOString(); salvarEstadoUsuario(); montarTelaResgate(); mostrarTela('tela-resgate'); }
     function montarTelaResgate(){ const p=estado.premioFinal; document.getElementById('resgate-nome').innerText=p.nome; document.getElementById('resgate-cupom').innerText=p.cupom; const d=new Date(estado.dataResgate); d.setDate(d.getDate()+7); document.getElementById('resgate-data').innerText=d.toLocaleDateString('pt-BR'); }
