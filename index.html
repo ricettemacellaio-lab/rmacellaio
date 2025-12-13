@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Macellaio Rewards - V24 Gravity</title>
+    <title>Macellaio Rewards - V25 Weight Master</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         /* --- ESTILOS GERAIS --- */
@@ -47,7 +47,7 @@
             z-index: 5;
         }
         
-        /* PONTEIRO REMOVIDO (O Dardo é o ponteiro) */
+        /* SEM PONTEIRO FIXO (O Dardo é o ponteiro) */
         #ponteiro { display: none; }
 
         .segmento { position: absolute; top: 0; right: 0; width: 50%; height: 50%; transform-origin: 0% 100%; overflow: hidden; }
@@ -67,7 +67,7 @@
             filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
         
-        /* Animação: Voa até o TOPO (12h) para impactar */
+        /* Trajetória para o TOPO (impacto inicial) */
         @keyframes dartTrajectory {
             0% { bottom: -150px; transform: translateX(-50%) rotate(180deg) scale(1.2); opacity: 1; }
             100% { bottom: 280px; transform: translateX(-50%) rotate(180deg) scale(0.9); opacity: 1; } 
@@ -135,7 +135,7 @@
         <button id="btn-arremessar" class="btn-gold btn-throw hidden" onclick="arremessarDardo()">ATIRAR DARDO!</button>
 
         <div id="msg-resultado" class="hidden" style="margin-top:20px; text-align:center;">
-            <p style="color:#aaa; font-size:0.9rem; margin-bottom:5px;">O dardo marcou:</p>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:5px;">O peso parou em:</p>
             <h3 id="txt-premio-atual" style="color:var(--gold); font-size:1.5rem; margin:0 0 20px 0;">...</h3>
             <button id="btn-resgatar-home" class="btn-gold" style="padding:12px 30px; font-size:0.9rem; width:auto;" onclick="irResgate()">RESGATAR</button>
             <button id="btn-girar-dnv" class="btn-outline" style="margin-left:10px;" onclick="resetarJogo()">GIRAR DE NOVO</button>
@@ -176,7 +176,7 @@
         </div>
         <div class="admin-section">
             <h3>Gerar Campanha</h3>
-            <input type="text" id="campanha-nome" class="input-admin" placeholder="Nome da Campanha">
+            <input type="text" id="campanha-nome" class="input-admin" placeholder="Nome da Campanha (ex: PROMO10)">
             <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK</button>
             <div id="resultado-link" class="link-result"></div>
         </div>
@@ -238,12 +238,13 @@
     // Sync vars
     let flyingFrames = 0;
 
+    // INIT
     window.onload = function() {
         const params = new URLSearchParams(window.location.search);
         
         // ADMIN
         if (params.get('admin') === '1' || params.get('admin') === 'true') { 
-            try { const stored = localStorage.getItem('macellaio_admin_config'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } 
+            try { const stored = localStorage.getItem('macellaio_admin_config_v25'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } 
             catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
             abrirAdmin(); return; 
         }
@@ -270,7 +271,7 @@
     };
 
     /* ----------------------------------------------------------------
-       3. LÓGICA DO JOGO (GRAVITY MASTER: Hit 12h -> Pull to 6h)
+       3. LÓGICA DO JOGO (GRAVITY MASTER: Hit 12h -> Fall to 6h)
        ---------------------------------------------------------------- */
     function iniciarGiroMotor() {
         if(estado.giros >= estado.maxGiros) return;
@@ -300,12 +301,13 @@
             targetPrizeIndex = Math.floor(Math.random() * premiosAtuais.length);
         }
 
-        // CÁLCULO DE ALVO (Alinhar 12h no Impacto)
+        // CÁLCULO DE ALVO (Alinhar 12h no Impacto para depois cair)
+        // O dardo vai bater em 12h (Topo).
         const segArc = 360 / premiosAtuais.length; 
         const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
         
-        // Alvo de rotação para impacto no TOPO (360/0deg)
-        let targetRotation = 360 - centerSegAngle;
+        // Alvo de rotação: Queremos que o centro do segmento bata no TOPO.
+        let targetRotation = 360 - centerSegAngle; 
         
         const currentMod = rotationAngle % 360; 
         let diff = targetRotation - currentMod; 
@@ -328,14 +330,12 @@
         dardoPreso.style.display = 'block';
         
         // O dardo bateu no TOPO (0deg visual).
-        // Rotação atual da roleta = rotationAngle.
-        // Ângulo relativo de fixação = 360 - rotationAngle
         dartAttachedAngle = 360 - rotationAngle;
         
         // Fixa visualmente (raio 145px)
         dardoPreso.style.transform = `rotate(${dartAttachedAngle}deg) translate(0, 145px)`;
         
-        // Nota: velocity continua alta, a inércia continua.
+        // Velocity continua alta, a inércia continua.
         // A física agora deve puxar esse peso para 180deg (Baixo).
     }
 
@@ -354,7 +354,7 @@
         else if (mode === 'PENDULUM') {
             // FÍSICA: Gravidade puxa o DARDO para 180 (Baixo)
             const currentDartPos = (rotationAngle + dartAttachedAngle) % 360;
-            let diff = 180 - currentDartPos; // Alvo é 180
+            let diff = 180 - currentDartPos; // Alvo é 180 (Baixo)
             
             if (diff > 180) diff -= 360; if (diff < -180) diff += 360;
             
@@ -424,7 +424,7 @@
     
     function salvarPremiosAdmin(){ 
         saveM(); 
-        localStorage.setItem('macellaio_admin_config', JSON.stringify(premiosAtuais)); 
+        localStorage.setItem('macellaio_admin_config_v25', JSON.stringify(premiosAtuais)); 
         alert("Salvo! Gere o link agora."); 
     }
     
