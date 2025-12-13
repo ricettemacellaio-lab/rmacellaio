@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Macellaio Rewards - V27 Bullseye Lock</title>
+    <title>Macellaio Rewards - V28 Enhanced Visuals</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         /* --- ESTILOS GERAIS --- */
@@ -61,27 +61,33 @@
         .seg-conteudo { position: absolute; left: -100%; width: 200%; height: 200%; text-align: center; padding-top: 40px; font-size: 0.75rem; font-weight: 700; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); display: flex; justify-content: center; }
         .seg-conteudo span { display: block; width: 80px; line-height: 1.1; }
 
-        /* --- NOVO CENTRO: ALVO (BULLSEYE) --- */
+        /* --- NOVO CENTRO: ALVO MELHORADO --- */
         #centro-roleta {
-            position: absolute; top: 50%; left: 50%; width: 60px; height: 60px;
+            position: absolute; top: 50%; left: 50%;
+            width: 50px; height: 50px; /* Menor */
             border-radius: 50%; transform: translate(-50%, -50%); z-index: 10;
-            /* Gradiente radial para criar os anéis do alvo */
-            background: radial-gradient(circle, #d32f2f 0%, #d32f2f 25%, #fff 25%, #fff 50%, #d32f2f 50%, #d32f2f 75%, #fff 75%, #fff 100%);
-            border: 3px solid #fff;
-            box-shadow: 0 0 15px rgba(0,0,0,0.6);
+            /* Gradiente nítido para alta resolução */
+            background: radial-gradient(circle, #d32f2f 0%, #d32f2f 20%, #fff 20%, #fff 40%, #d32f2f 40%, #d32f2f 60%, #fff 60%, #fff 80%, #000 80%, #000 100%);
+            border: 4px solid #000; /* Borda preta grossa externa */
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
 
-        /* --- VISUAIS DO DARDO --- */
+        /* --- VISUAIS DO DARDO (PROJÉTIL APENAS) --- */
         #projectile-dart {
-            position: absolute; bottom: -150px; left: 50%; transform: translateX(-50%) rotate(180deg);
-            font-size: 50px; z-index: 30; display: none; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+            position: absolute; 
+            bottom: -150px; left: 50%; 
+            /* Rotação inicial para a adaga apontar para cima e ligeiramente inclinada */
+            transform: translateX(-50%) rotate(225deg);
+            font-size: 80px; /* BEM MAIOR */
+            z-index: 30; display: none; pointer-events: none; 
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.6));
         }
         
-        /* NOVA TRAJETÓRIA: Vai para o CENTRO (Alvo) */
+        /* Trajetória para o CENTRO */
         @keyframes dartTrajectoryCenter {
-            0% { bottom: -150px; transform: translateX(-50%) rotate(180deg) scale(1.2); opacity: 1; }
-            /* Ajuste de bottom para centralizar a ponta no alvo */
-            100% { bottom: 135px; transform: translateX(-50%) rotate(180deg) scale(0.7); opacity: 1; } 
+            0% { bottom: -150px; transform: translateX(-50%) rotate(225deg) scale(1.0); opacity: 1; }
+            /* Ajuste do ponto de impacto para a ponta da adaga bater no centro */
+            100% { bottom: 110px; transform: translateX(-50%) rotate(225deg) scale(1.0); opacity: 1; } 
         }
         .flying-dart-anim { animation: dartTrajectoryCenter 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
 
@@ -90,10 +96,14 @@
             position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: 35; display: none; pointer-events: none;
         }
         #dardo-preso::after {
-            content: '🎯'; font-size: 45px; 
-            position: absolute; top: -22px; left: -22px;
-            transform: rotate(180deg); /* Aponta pra baixo */
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            content: '🗡️'; /* Apenas o dardo/adaga */
+            font-size: 75px; /* Tamanho grande quando fincado */
+            position: absolute;
+            /* Ajuste fino de posição da ponta */
+            top: -48px; left: -32px;
+            /* Rotação para parecer fincado no ângulo */
+            transform: rotate(225deg);
+            filter: drop-shadow(0 5px 8px rgba(0,0,0,0.6));
         }
 
         /* BOTÕES */
@@ -136,11 +146,10 @@
         <div id="roleta-container">
             <div id="ponteiro"></div>
             
-            <div id="roleta-wrapper">
-                </div>
+            <div id="roleta-wrapper"></div>
             <div id="centro-roleta"></div>
             <div id="dardo-preso"></div>
-            <div id="projectile-dart">🎯</div>
+            <div id="projectile-dart">🗡️</div>
         </div>
 
         <button id="btn-girar" class="btn-gold" onclick="iniciarGiroMotor()">GIRAR ROLETA</button>
@@ -253,7 +262,7 @@
         
         // ADMIN
         if (params.get('admin') === '1' || params.get('admin') === 'true') { 
-            try { const stored = localStorage.getItem('macellaio_admin_config_v27'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } 
+            try { const stored = localStorage.getItem('macellaio_admin_config_v28'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } 
             catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
             abrirAdmin(); return; 
         }
@@ -341,8 +350,7 @@
         const dardoPreso = document.getElementById('dardo-preso'); 
         dardoPreso.style.display = 'block';
         
-        // Centraliza o dardo visualmente no alvo (com um leve ajuste e escala)
-        dardoPreso.style.transform = `rotate(180deg) translate(0, -15px) scale(0.7)`;
+        // O CSS do ::after já cuida da rotação e posição do dardo preso
 
         // FORÇA A ROTAÇÃO EXATA DO PRÊMIO (Corrige desalinhamentos de frame)
         const segArc = 360 / premiosAtuais.length;
@@ -365,7 +373,6 @@
             flyingFrames--;
             if (flyingFrames <= 0) impactoDardo(); // Chama impacto e trava
         }
-        // MODO PENDULUM REMOVIDO - Parada é instantânea
 
         document.getElementById('roleta-wrapper').style.transform = `rotate(${rotationAngle}deg)`;
         animFrame = requestAnimationFrame(loopFisica);
@@ -404,7 +411,7 @@
     function adicionarPremio(){ saveM(); premiosAtuais.push({nome:"",cupom:"",peso:0,cor:CORES[premiosAtuais.length%CORES.length]}); renderAdminPremios(); }
     function rmP(i){ if(premiosAtuais.length<=2)return; if(confirm("Remover?")){ saveM(); premiosAtuais.splice(i,1); renderAdminPremios(); } }
     function saveM(){ premiosAtuais.forEach((p,i)=>{ const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value; const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value; const w=document.getElementById(`p-${i}`); let wVal = parseInt(w.value); if(isNaN(wVal)) wVal = 0; p.peso = wVal; }); }
-    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_admin_config_v27', JSON.stringify(premiosAtuais)); alert("Salvo! Gere o link agora."); }
+    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_admin_config_v28', JSON.stringify(premiosAtuais)); alert("Salvo! Gere o link agora."); }
     function gerarLink(){ const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); if(!n)return alert("Digite nome da campanha"); saveM(); const jsonConfig = JSON.stringify(premiosAtuais); const encodedConfig = btoa(encodeURIComponent(jsonConfig)); const u=`${location.origin}${location.pathname}?c=${n}&d=${encodedConfig}`; document.getElementById('resultado-link').style.display='block'; document.getElementById('resultado-link').innerHTML=`Link Seguro:<br><a href="${u}" style="color:#fff; word-break:break-all;">${u}</a>`; }
     function renderizarRoleta(){ const w=document.getElementById('roleta-wrapper'); w.innerHTML=''; const tot=premiosAtuais.length; const arc=360/tot; premiosAtuais.forEach((p,i)=>{ const s=document.createElement('div'); s.className='segmento'; const r=i*arc; const sk=90-arc; s.style.transform=`rotate(${r}deg) skewY(-${sk}deg)`; s.style.backgroundColor=p.cor; const c=document.createElement('div'); c.className='seg-conteudo'; c.style.transform=`skewY(${sk}deg) rotate(${arc/2}deg)`; c.innerHTML=`<span>${p.nome}</span>`; s.appendChild(c); w.appendChild(s); }); }
     function irResgate(){ if(!estado.premioFinal)return; estado.resgatado=true; estado.dataResgate=new Date().toISOString(); salvarEstadoUsuario(); montarTelaResgate(); mostrarTela('tela-resgate'); }
