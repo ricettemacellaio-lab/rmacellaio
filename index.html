@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Macellaio Rewards - V30 Visual Fix</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Macellaio Rewards - V31 Customizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=Montserrat:wght@700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
-        /* --- ESTILOS GERAIS --- */
+        /* --- ESTILOS GERAIS (Variáveis Dinâmicas) --- */
         :root {
-            --gold: #FFC107; --gold-dark: #FFB300;
-            --bg-page: #0f0f0f; --bg-panel: #1E1E1E;
+            --gold: #FFC107; /* Cor Principal (Destaque) */
+            --gold-dark: #FFB300;
+            --bg-page: #0f0f0f; /* Cor Fundo */
+            --bg-panel: #1E1E1E;
             --text-main: #ffffff;
             --danger: #d32f2f;
+            --font-main: 'Roboto', sans-serif;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { height: 100%; margin: 0; font-family: 'Roboto', sans-serif; background: #000; color: var(--text-main); overflow: hidden; }
+        body, html { height: 100%; margin: 0; font-family: var(--font-main); background: var(--bg-page); color: var(--text-main); overflow: hidden; }
         
         #app-container {
             width: 100%; height: 100%; max-width: 500px; margin: 0 auto;
@@ -23,7 +26,8 @@
         }
         #fundo-overlay {
             position: absolute; width: 100%; height: 100%; top:0; left:0;
-            background: url('https://img.freepik.com/fotos-gratis/hamburguer-vista-frontal-em-tua-de-madeira-escura_23-2148234991.jpg') center/cover;
+            background-image: url('https://img.freepik.com/fotos-gratis/hamburguer-vista-frontal-em-tua-de-madeira-escura_23-2148234991.jpg'); /* Default */
+            background-size: cover; background-position: center;
             opacity: 0.2; pointer-events: none; z-index: 0;
         }
         main { flex: 1; position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
@@ -47,65 +51,44 @@
             z-index: 5;
         }
         
-        /* PONTEIRO AMARELO (TOPO 12h) */
+        /* Ponteiro (TOPO 12h) */
         #ponteiro { 
-            position: absolute; 
-            top: -25px; /* Fixo no topo */
-            left: 50%; 
-            transform: translateX(-50%);
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0; 
-            border-left: 25px solid transparent; border-right: 25px solid transparent; border-top: 50px solid var(--gold); 
-            z-index: 25; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5)); 
+            border-left: 25px solid transparent; border-right: 25px solid transparent; 
+            border-top: 50px solid var(--gold); /* Usa a cor principal */
+            opacity: 0.8;
+            z-index: 25; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3)); 
         }
 
         .segmento { position: absolute; top: 0; right: 0; width: 50%; height: 50%; transform-origin: 0% 100%; overflow: hidden; }
         .seg-conteudo { position: absolute; left: -100%; width: 200%; height: 200%; text-align: center; padding-top: 40px; font-size: 0.75rem; font-weight: 700; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); display: flex; justify-content: center; }
         .seg-conteudo span { display: block; width: 80px; line-height: 1.1; }
 
-        /* --- NOVO CENTRO: ALVO (Ajustado Posição) --- */
+        /* --- NOVO CENTRO: ALVO --- */
         #centro-roleta {
-            position: absolute; 
-            /* AJUSTE: Subi de 50% para 48% para preencher melhor visualmente se houver desvio */
-            top: 48%; left: 50%;
-            width: 50px; height: 50px;
+            position: absolute; top: 48%; left: 50%; width: 50px; height: 50px;
             border-radius: 50%; transform: translate(-50%, -50%); z-index: 10;
             background: radial-gradient(circle, #d32f2f 0%, #d32f2f 25%, #fff 25%, #fff 50%, #d32f2f 50%, #d32f2f 75%, #fff 75%, #fff 100%);
-            border: 4px solid #000; /* Borda preta grossa */
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            border: 4px solid #000; box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
 
-        /* --- VISUAIS DO DARDO (Trajetória Mais Alta) --- */
+        /* --- DARDO --- */
         #projectile-dart {
-            position: absolute; 
-            bottom: -150px; left: 50%; 
-            transform: translateX(-50%) rotate(180deg); /* Ponta pra cima */
-            font-size: 80px; /* Dardo Grande */
-            z-index: 30; display: none; pointer-events: none; 
-            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+            position: absolute; bottom: -150px; left: 50%; transform: translateX(-50%) rotate(180deg);
+            font-size: 80px; z-index: 30; display: none; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
-        
-        /* Trajetória para o CENTRO EXATO (Levando em conta o ajuste de altura) */
         @keyframes dartTrajectoryCenter {
             0% { bottom: -150px; transform: translateX(-50%) scale(1.0); opacity: 1; }
-            /* Ajuste: Subi bottom para 140px para acertar o bullseye */
             100% { bottom: 140px; transform: translateX(-50%) scale(0.9); opacity: 1; } 
         }
         .flying-dart-anim { animation: dartTrajectoryCenter 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
 
-        /* Dardo PRESO no centro */
-        #dardo-preso {
-            position: absolute; top: 48%; left: 50%; width: 0; height: 0; z-index: 35; display: none; pointer-events: none;
-        }
-        #dardo-preso::after {
-            content: '🎯'; 
-            font-size: 70px; 
-            position: absolute;
-            top: -42px; left: -35px; /* Centralizado no ponto */
-            filter: drop-shadow(0 5px 8px rgba(0,0,0,0.6));
-        }
+        #dardo-preso { position: absolute; top: 48%; left: 50%; width: 0; height: 0; z-index: 35; display: none; pointer-events: none; }
+        #dardo-preso::after { content: '🎯'; font-size: 70px; position: absolute; top: -42px; left: -35px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.6)); }
 
         /* BOTÕES */
-        .btn-gold { background: var(--gold); color: #000; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; border: none; padding: 18px 0; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 193, 7, 0.4); width: 85%; max-width: 300px; transition: transform 0.1s; position: relative; z-index: 101; }
+        .btn-gold { background: var(--gold); color: #000; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; border: none; padding: 18px 0; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(0,0,0,0.4); width: 85%; max-width: 300px; transition: transform 0.1s; position: relative; z-index: 101; }
         .btn-gold:active { transform: scale(0.96); }
         .btn-throw { background: #E91E63; color: white; box-shadow: 0 0 20px rgba(233, 30, 99, 0.5); }
         .btn-outline { background: transparent; border: 2px solid #555; color: #fff; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
@@ -130,6 +113,11 @@
         .btn-add { background: #e0e0e0; color: #333; } .btn-save { background: #900; color: #fff; }
         .hidden { display: none !important; }
         .link-result { margin-top:10px; padding:10px; background:#004d40; color:#fff; font-size:0.8rem; border-radius:5px; word-break:break-all; display:none; }
+        
+        /* Customizer Inputs */
+        .color-picker-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .color-picker-row label { color: #ccc; font-size: 0.9rem; }
+        .color-input { width: 50px; height: 30px; border: none; padding: 0; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -143,9 +131,7 @@
 
         <div id="roleta-container">
             <div id="ponteiro"></div>
-            
             <div id="roleta-wrapper"></div>
-            
             <div id="centro-roleta"></div>
             <div id="dardo-preso"></div>
             <div id="projectile-dart">🎯</div>
@@ -182,22 +168,48 @@
 
     <div id="tela-admin" class="tela">
         <div class="header-title" style="font-size:1.2rem; margin-top:20px;">ADMINISTRAÇÃO</div>
+        
         <div class="admin-section">
             <h3>Prêmios & Pesos (Mestre)</h3>
-            <p style="font-size:0.7rem; color:#aaa;">O link gerado HERDA estes pesos.</p>
+            <p style="font-size:0.7rem; color:#aaa;">O link gerado HERDA estes pesos e visual.</p>
             <div style="display:flex; gap:5px; font-size:0.7rem; color:#888; margin-bottom:5px;">
                 <span class="col-nome">NOME</span><span class="col-cupom">CUPOM</span><span class="col-peso">PESO</span>
             </div>
             <div id="lista-premios"></div>
             <div style="margin-top:10px; display:flex; gap:10px;">
                 <button onclick="adicionarPremio()" class="btn-add">+ ITEM</button>
-                <button onclick="salvarPremiosAdmin()" class="btn-save">SALVAR PREMIOS</button>
+                <button onclick="salvarConfigAdmin()" class="btn-save">SALVAR TUDO</button>
             </div>
         </div>
+
+        <div class="admin-section">
+            <h3>Personalização Visual</h3>
+            
+            <label style="color:#ccc; font-size:0.8rem;">Imagem de Fundo (URL):</label>
+            <input type="text" id="custom-bg-url" class="input-admin" placeholder="https://..." onchange="previewCustomizations()">
+            
+            <div class="color-picker-row" style="margin-top:10px;">
+                <label>Cor Principal (Botões/Títulos):</label>
+                <input type="color" id="custom-color-main" class="color-input" value="#FFC107" onchange="previewCustomizations()">
+            </div>
+            
+            <div class="color-picker-row">
+                <label>Cor de Fundo da Página:</label>
+                <input type="color" id="custom-color-bg" class="color-input" value="#0f0f0f" onchange="previewCustomizations()">
+            </div>
+
+            <label style="color:#ccc; font-size:0.8rem; margin-top:5px;">Estilo de Fonte:</label>
+            <select id="custom-font" class="input-admin" onchange="previewCustomizations()">
+                <option value="'Roboto', sans-serif">Padrão (Moderna)</option>
+                <option value="'Montserrat', sans-serif">Elegante (Montserrat)</option>
+                <option value="'Playfair Display', serif">Clássica (Serifa)</option>
+            </select>
+        </div>
+
         <div class="admin-section">
             <h3>Gerar Campanha</h3>
             <input type="text" id="campanha-nome" class="input-admin" placeholder="Nome da Campanha (ex: PROMO10)">
-            <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK</button>
+            <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK CURTO</button>
             <div id="resultado-link" class="link-result"></div>
         </div>
         <br><br>
@@ -251,27 +263,51 @@
         { nome: "BOGO", cupom: "BOGO", cor: "#8E24AA", peso: 2 }, { nome: "Sobremesa", cupom: "DOCE", cor: "#FB8C00", peso: 10 },
         { nome: "5% OFF", cupom: "DESC05", cor: "#FDD835", peso: 20 }, { nome: "Tente de Novo", cupom: "", cor: "#78909C", peso: 50 } 
     ];
+    const DEFAULT_STYLE = {
+        bgUrl: 'https://img.freepik.com/fotos-gratis/hamburguer-vista-frontal-em-tua-de-madeira-escura_23-2148234991.jpg',
+        mainColor: '#FFC107',
+        bgColor: '#0f0f0f',
+        font: "'Roboto', sans-serif"
+    };
+    
     const CORES = ["#e53935", "#43A047", "#1E88E5", "#FB8C00", "#8E24AA", "#00ACC1", "#FDD835", "#78909C"];
-    let premiosAtuais, estado = { campanha: null, giros: 0, maxGiros: 3, resgatado: false, premioFinal: null, dataResgate: null };
+    let premiosAtuais, styleAtual, estado = { campanha: null, giros: 0, maxGiros: 3, resgatado: false, premioFinal: null, dataResgate: null };
     let rotationAngle = 0, velocity = 0, mode = 'IDLE', animFrame = null, dartAttachedAngle = 0, targetPrizeIndex = -1, segredoClicks = 0;
     let flyingFrames = 0;
 
     window.onload = function() {
         const params = new URLSearchParams(window.location.search);
         
+        // ADMIN
         if (params.get('admin') === '1' || params.get('admin') === 'true') { 
-            try { const stored = localStorage.getItem('macellaio_admin_config_v30'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } 
-            catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
-            abrirAdmin(); return; 
+            try { 
+                const storedP = localStorage.getItem('macellaio_admin_premios_v31');
+                premiosAtuais = storedP ? JSON.parse(storedP) : DEFAULT_PREMIOS;
+                
+                const storedS = localStorage.getItem('macellaio_admin_style_v31');
+                styleAtual = storedS ? JSON.parse(storedS) : DEFAULT_STYLE;
+            } catch (e) { premiosAtuais = DEFAULT_PREMIOS; styleAtual = DEFAULT_STYLE; }
+            
+            aplicarEstilo(styleAtual);
+            abrirAdmin(); 
+            return; 
         }
 
+        // CLIENTE (Link Data ou Default)
         const encodedData = params.get('d');
         if (encodedData) {
-            try { premiosAtuais = JSON.parse(decodeURIComponent(atob(encodedData))); } 
-            catch(e) { premiosAtuais = DEFAULT_PREMIOS; }
+            try { 
+                const data = JSON.parse(decodeURIComponent(atob(encodedData)));
+                premiosAtuais = data.premios || DEFAULT_PREMIOS;
+                styleAtual = data.style || DEFAULT_STYLE;
+            } 
+            catch(e) { premiosAtuais = DEFAULT_PREMIOS; styleAtual = DEFAULT_STYLE; }
         } else {
             premiosAtuais = DEFAULT_PREMIOS;
+            styleAtual = DEFAULT_STYLE;
         }
+
+        aplicarEstilo(styleAtual);
 
         const campanha = params.get('c'); 
         if (!campanha) { mostrarTela('tela-bloqueio'); return; }
@@ -285,8 +321,20 @@
         } else { renderizarRoleta(); atualizarUI(); mostrarTela('tela-jogo'); }
     };
 
+    function aplicarEstilo(style) {
+        document.documentElement.style.setProperty('--gold', style.mainColor);
+        document.documentElement.style.setProperty('--bg-page', style.bgColor);
+        document.body.style.fontFamily = style.font;
+        
+        if(style.bgUrl && style.bgUrl.trim() !== "") {
+            document.getElementById('fundo-overlay').style.backgroundImage = `url('${style.bgUrl}')`;
+        } else {
+            document.getElementById('fundo-overlay').style.backgroundImage = 'none';
+        }
+    }
+
     /* ----------------------------------------------------------------
-       3. LÓGICA DO JOGO (BULLSEYE INSTANT LOCK - TOPO)
+       3. LÓGICA DO JOGO
        ---------------------------------------------------------------- */
     function iniciarGiroMotor() {
         if(estado.giros >= estado.maxGiros) return;
@@ -298,11 +346,9 @@
     function arremessarDardo() {
         if (mode !== 'MOTOR') return;
         document.getElementById('btn-arremessar').classList.add('hidden');
-        
         const projectile = document.getElementById('projectile-dart'); 
         projectile.style.display = 'block'; projectile.classList.add('flying-dart-anim');
         
-        // SORTEIO PONDERADO
         let totalPeso = premiosAtuais.reduce((s, p) => s + (parseInt(p.peso) || 0), 0);
         let r = Math.random() * totalPeso;
         let cursor = 0; targetPrizeIndex = 0;
@@ -316,12 +362,9 @@
             targetPrizeIndex = Math.floor(Math.random() * premiosAtuais.length);
         }
 
-        // CÁLCULO DE ALVO (Alinhar 12h no momento do impacto no centro)
         const segArc = 360 / premiosAtuais.length; 
         const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
-        
-        // Target Rotation = Topo (360/0deg)
-        let targetRotation = 360 - centerSegAngle;
+        let targetRotation = 360 - centerSegAngle; 
         
         const currentMod = rotationAngle % 360; 
         let diff = targetRotation - currentMod; 
@@ -330,7 +373,6 @@
         const framesToImpact = 22; 
         const distanceNeeded = diff + 360; 
         velocity = distanceNeeded / framesToImpact; 
-        
         flyingFrames = 22;
         mode = 'FLYING';
     }
@@ -338,32 +380,19 @@
     function impactoDardo() {
         mode = 'FINISHED'; stopSpinSound(); playThud();
         document.getElementById('projectile-dart').style.display = 'none';
-        
         const dardoPreso = document.getElementById('dardo-preso'); 
         dardoPreso.style.display = 'block';
-        
-        // FORÇA A ROTAÇÃO EXATA DO PRÊMIO (TOPO)
         const segArc = 360 / premiosAtuais.length;
         const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
         rotationAngle = 360 - centerSegAngle;
         document.getElementById('roleta-wrapper').style.transform = `rotate(${rotationAngle}deg)`;
-        
         finalizarJogo();
     }
 
     function loopFisica() {
         if (mode === 'IDLE' || mode === 'FINISHED') return;
-
-        if (mode === 'MOTOR') {
-            if (velocity < 25) velocity += 0.8;
-            rotationAngle += velocity;
-        }
-        else if (mode === 'FLYING') {
-            rotationAngle += velocity;
-            flyingFrames--;
-            if (flyingFrames <= 0) impactoDardo();
-        }
-
+        if (mode === 'MOTOR') { if (velocity < 25) velocity += 0.8; rotationAngle += velocity; }
+        else if (mode === 'FLYING') { rotationAngle += velocity; flyingFrames--; if (flyingFrames <= 0) impactoDardo(); }
         document.getElementById('roleta-wrapper').style.transform = `rotate(${rotationAngle}deg)`;
         animFrame = requestAnimationFrame(loopFisica);
     }
@@ -371,7 +400,6 @@
     function finalizarJogo() {
         cancelAnimationFrame(animFrame); playWin();
         const premio = premiosAtuais[targetPrizeIndex]; 
-        
         setTimeout(() => {
             estado.giros++;
             if (!premio.cupom || premio.cupom.trim() === "") { document.getElementById('txt-premio-atual').innerText = "Não foi dessa vez!"; estado.premioFinal = null; } else { estado.premioFinal = premio; document.getElementById('txt-premio-atual').innerText = premio.nome; }
@@ -386,9 +414,20 @@
         document.getElementById('dardo-preso').style.display = 'none'; document.getElementById('projectile-dart').classList.remove('flying-dart-anim');
     }
 
-    /* --- ADMIN & LINK --- */
+    /* --- ADMINISTRAÇÃO & CUSTOMIZAÇÃO --- */
     function verificarSegredo() { segredoClicks++; if(segredoClicks >= 5) { alert("Acesso Admin!"); abrirAdmin(); }}
-    function abrirAdmin() { document.getElementById('tela-admin').classList.add('ativa'); document.getElementById('tela-jogo').classList.remove('ativa'); document.getElementById('tela-bloqueio').classList.remove('ativa'); renderAdminPremios(); }
+    function abrirAdmin() { 
+        document.getElementById('tela-admin').classList.add('ativa'); 
+        document.getElementById('tela-jogo').classList.remove('ativa'); 
+        document.getElementById('tela-bloqueio').classList.remove('ativa'); 
+        renderAdminPremios(); 
+        
+        // Popula campos de estilo
+        document.getElementById('custom-bg-url').value = styleAtual.bgUrl;
+        document.getElementById('custom-color-main').value = styleAtual.mainColor;
+        document.getElementById('custom-color-bg').value = styleAtual.bgColor;
+        document.getElementById('custom-font').value = styleAtual.font;
+    }
     
     function renderAdminPremios() { 
         const l = document.getElementById('lista-premios'); l.innerHTML=''; 
@@ -398,11 +437,52 @@
             l.appendChild(d); 
         }); 
     }
-    function adicionarPremio(){ saveM(); premiosAtuais.push({nome:"",cupom:"",peso:0,cor:CORES[premiosAtuais.length%CORES.length]}); renderAdminPremios(); }
-    function rmP(i){ if(premiosAtuais.length<=2)return; if(confirm("Remover?")){ saveM(); premiosAtuais.splice(i,1); renderAdminPremios(); } }
-    function saveM(){ premiosAtuais.forEach((p,i)=>{ const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value; const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value; const w=document.getElementById(`p-${i}`); let wVal = parseInt(w.value); if(isNaN(wVal)) wVal = 0; p.peso = wVal; }); }
-    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_admin_config_v30', JSON.stringify(premiosAtuais)); alert("Salvo! Gere o link agora."); }
-    function gerarLink(){ const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); if(!n)return alert("Digite nome da campanha"); saveM(); const jsonConfig = JSON.stringify(premiosAtuais); const encodedConfig = btoa(encodeURIComponent(jsonConfig)); const u=`${location.origin}${location.pathname}?c=${n}&d=${encodedConfig}`; document.getElementById('resultado-link').style.display='block'; document.getElementById('resultado-link').innerHTML=`Link Seguro:<br><a href="${u}" style="color:#fff; word-break:break-all;">${u}</a>`; }
+    function adicionarPremio(){ captureState(); premiosAtuais.push({nome:"",cupom:"",peso:0,cor:CORES[premiosAtuais.length%CORES.length]}); renderAdminPremios(); }
+    function rmP(i){ if(premiosAtuais.length<=2)return; if(confirm("Remover?")){ captureState(); premiosAtuais.splice(i,1); renderAdminPremios(); } }
+    
+    function captureState(){ 
+        premiosAtuais.forEach((p,i)=>{ 
+            const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value; 
+            const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value; 
+            const w=document.getElementById(`p-${i}`); 
+            let wVal = parseInt(w.value); if(isNaN(wVal)) wVal = 0; p.peso = wVal; 
+        });
+        
+        styleAtual.bgUrl = document.getElementById('custom-bg-url').value;
+        styleAtual.mainColor = document.getElementById('custom-color-main').value;
+        styleAtual.bgColor = document.getElementById('custom-color-bg').value;
+        styleAtual.font = document.getElementById('custom-font').value;
+    }
+    
+    function previewCustomizations() {
+        // Aplica em tempo real para o admin ver
+        captureState();
+        aplicarEstilo(styleAtual);
+    }
+    
+    function salvarConfigAdmin(){ 
+        captureState(); 
+        localStorage.setItem('macellaio_admin_premios_v31', JSON.stringify(premiosAtuais)); 
+        localStorage.setItem('macellaio_admin_style_v31', JSON.stringify(styleAtual)); 
+        alert("Configuração Salva! O link gerado conterá essas cores e prêmios."); 
+    }
+    
+    function gerarLink(){ 
+        const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); 
+        if(!n)return alert("Digite nome da campanha"); 
+        
+        captureState();
+        
+        // Empacota tudo (Prêmios + Estilo)
+        const fullConfig = { premios: premiosAtuais, style: styleAtual };
+        const jsonConfig = JSON.stringify(fullConfig);
+        const encodedConfig = btoa(encodeURIComponent(jsonConfig)); 
+        
+        const u=`${location.origin}${location.pathname}?c=${n}&d=${encodedConfig}`; 
+        document.getElementById('resultado-link').style.display='block'; 
+        document.getElementById('resultado-link').innerHTML=`Link Personalizado:<br><a href="${u}" style="color:#fff; word-break:break-all;">${u}</a>`; 
+    }
+
     function renderizarRoleta(){ const w=document.getElementById('roleta-wrapper'); w.innerHTML=''; const tot=premiosAtuais.length; const arc=360/tot; premiosAtuais.forEach((p,i)=>{ const s=document.createElement('div'); s.className='segmento'; const r=i*arc; const sk=90-arc; s.style.transform=`rotate(${r}deg) skewY(-${sk}deg)`; s.style.backgroundColor=p.cor; const c=document.createElement('div'); c.className='seg-conteudo'; c.style.transform=`skewY(${sk}deg) rotate(${arc/2}deg)`; c.innerHTML=`<span>${p.nome}</span>`; s.appendChild(c); w.appendChild(s); }); }
     function irResgate(){ if(!estado.premioFinal)return; estado.resgatado=true; estado.dataResgate=new Date().toISOString(); salvarEstadoUsuario(); montarTelaResgate(); mostrarTela('tela-resgate'); }
     function montarTelaResgate(){ const p=estado.premioFinal; document.getElementById('resgate-nome').innerText=p.nome; document.getElementById('resgate-cupom').innerText=p.cupom; const d=new Date(estado.dataResgate); d.setDate(d.getDate()+7); document.getElementById('resgate-data').innerText=d.toLocaleDateString('pt-BR'); }
