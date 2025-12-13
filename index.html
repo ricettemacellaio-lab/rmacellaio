@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Macellaio Rewards - V20 Fixed</title>
+    <title>Macellaio Rewards - V21 Magnet</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         /* --- ESTILOS GERAIS --- */
@@ -61,7 +61,7 @@
         .seg-conteudo span { display: block; width: 80px; line-height: 1.1; }
         #centro-roleta { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background: #222; border: 4px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; }
 
-        /* --- VISUAIS DO DARDO --- */
+        /* --- VISUAIS DO DARDO (Ajustado Posição) --- */
         #projectile-dart {
             position: absolute; 
             bottom: -150px; left: 50%; 
@@ -72,13 +72,14 @@
             pointer-events: none; 
             filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
-        /* Duração ajustada para coincidir com a lógica de frames (aprox 20 frames = 333ms) */
+        /* Ajuste para bater mais para dentro (bottom: 75px) */
         @keyframes dartTrajectory {
             0% { bottom: -150px; transform: translateX(-50%) rotate(180deg) scale(1.2); opacity: 1; }
-            100% { bottom: 40px; transform: translateX(-50%) rotate(180deg) scale(0.9); opacity: 1; } 
+            100% { bottom: 75px; transform: translateX(-50%) rotate(180deg) scale(0.9); opacity: 1; } 
         }
         .flying-dart-anim { animation: dartTrajectory 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
 
+        /* Dardo PRESO na roleta */
         #dardo-preso {
             position: absolute; top: 50%; left: 50%;
             width: 0; height: 0; 
@@ -176,7 +177,7 @@
         </div>
         <div class="admin-section">
             <h3>Prêmios (Peso)</h3>
-            <p style="font-size:0.7rem; color:#aaa;">Peso maior = Mais chance. Peso 0 = Impossível.</p>
+            <p style="font-size:0.7rem; color:#aaa;">Probabilidade se aplica a cada giro individualmente.</p>
             <div id="lista-premios"></div>
             <div style="margin-top:10px; display:flex; gap:10px;">
                 <button onclick="adicionarPremio()" class="btn-add">+ ITEM</button>
@@ -238,11 +239,10 @@
     let premiosAtuais, estado = { campanha: null, giros: 0, maxGiros: 3, resgatado: false, premioFinal: null, dataResgate: null };
     let rotationAngle = 0, velocity = 0, mode = 'IDLE', animFrame = null, dartAttachedAngle = 0, targetPrizeIndex = -1, segredoClicks = 0;
     
-    // Variáveis de Controle de Voo (Sync)
+    // Sync vars
     let flyingFrames = 0;
-    let targetRotationForImpact = 0;
 
-    try { const stored = localStorage.getItem('macellaio_premios_v20'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
+    try { const stored = localStorage.getItem('macellaio_premios_v21'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
 
     window.onload = function() {
         const params = new URLSearchParams(window.location.search);
@@ -256,7 +256,7 @@
     };
 
     /* ----------------------------------------------------------------
-       3. LÓGICA DO JOGO (Sincronizada por Frames)
+       3. LÓGICA DO JOGO
        ---------------------------------------------------------------- */
     function iniciarGiroMotor() {
         if(estado.giros >= estado.maxGiros) return;
@@ -269,43 +269,40 @@
         if (mode !== 'MOTOR') return;
         document.getElementById('btn-arremessar').classList.add('hidden');
         
-        // 1. Iniciar Animação Visual
         const projectile = document.getElementById('projectile-dart'); 
         projectile.style.display = 'block'; projectile.classList.add('flying-dart-anim');
         
-        // 2. Sorteio Ponderado (Probabilidade Garantida)
+        // --- SORTEIO PONDERADO REAL ---
+        // Este sorteio é feito AGORA e respeitado até o final
         let totalPeso = premiosAtuais.reduce((s, p) => s + (parseInt(p.peso)||0), 0);
         let r = Math.random() * totalPeso;
         let cursor = 0; targetPrizeIndex = 0;
         
-        // Se todos os pesos forem 0, sorteia equiprovável (modo fallback)
-        if (totalPeso === 0) {
-             targetPrizeIndex = Math.floor(Math.random() * premiosAtuais.length);
-        } else {
+        if (totalPeso > 0) {
             for(let i=0; i<premiosAtuais.length; i++) { 
                 cursor += (parseInt(premiosAtuais[i].peso)||0); 
                 if(r < cursor) { targetPrizeIndex = i; break; } 
             }
+        } else {
+            targetPrizeIndex = Math.floor(Math.random() * premiosAtuais.length);
         }
 
-        // 3. Calcular Onde a Roleta Precisa Estar
-        // Queremos que o centro do segmento premiado esteja em 180deg (Baixo) no momento do impacto.
-        const segArc = 360 / premiosAtuais.length;
+        // CÁLCULO DE ALVO (Alinhar 6h)
+        const segArc = 360 / premiosAtuais.length; 
         const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
         // O alvo de rotação da roleta para que esse segmento esteja em baixo (180):
-        targetRotationForImpact = 180 - centerSegAngle;
+        let targetRotation = 180 - centerSegAngle;
         
-        // Ajustar para ser no futuro (rotacionando para frente)
-        const currentMod = rotationAngle % 360;
-        let diff = targetRotationForImpact - currentMod;
-        if (diff < 0) diff += 360;
+        const currentMod = rotationAngle % 360; 
+        let diff = targetRotation - currentMod; 
+        if (diff < 0) diff += 360; 
         
-        // Adicionar voltas para manter velocidade alta
-        // A animação dura ~350ms. A 60fps = ~21 frames.
-        flyingFrames = 22; 
-        const distanceNeeded = diff + 360; // 1 volta + diff
-        velocity = distanceNeeded / flyingFrames; // Velocidade exata para chegar lá
+        // Ajuste de velocidade para sincronizar com a animação CSS (350ms)
+        const framesToImpact = 22; 
+        const distanceNeeded = diff + 360; // 1 volta extra
+        velocity = distanceNeeded / framesToImpact; 
         
+        flyingFrames = 22;
         mode = 'FLYING';
     }
 
@@ -316,48 +313,45 @@
         const dardoPreso = document.getElementById('dardo-preso'); 
         dardoPreso.style.display = 'block';
         
-        // No momento do impacto, a rotação está EXATAMENTE onde calculamos.
-        // O dardo "bate" em 180 (baixo).
-        // A rotação da roleta é 'rotationAngle'.
+        // Cálculo do Ponto de Impacto (Agora garantido pela velocidade anterior)
+        // O dardo bateu em 180 (baixo). Onde isso é na roleta?
         dartAttachedAngle = 180 - rotationAngle;
         
-        // Fixa visualmente
-        dardoPreso.style.transform = `rotate(${dartAttachedAngle}deg) translate(0, 150px)`;
+        // VISUAL FIXO (Mais ao centro)
+        dardoPreso.style.transform = `rotate(${dartAttachedAngle}deg) translate(0, 110px)`;
     }
 
     function loopFisica() {
         if (mode === 'IDLE') return;
 
         if (mode === 'MOTOR') {
-            // Acelera
             if (velocity < 25) velocity += 0.8;
             rotationAngle += velocity;
         }
         else if (mode === 'FLYING') {
-            // Modo Guiado: Interpolando para o alvo
+            // Sincronizando impacto
             rotationAngle += velocity;
             flyingFrames--;
-            if (flyingFrames <= 0) {
-                // Chegou no momento do impacto
-                impactoDardo();
-            }
+            if (flyingFrames <= 0) impactoDardo();
         }
         else if (mode === 'PENDULUM') {
-            // Física de Peso: O dardo quer ir para 180
+            // IMÃ MAGNÉTICO PARA 6H
+            // O dardo está em (rotationAngle + dartAttachedAngle)
+            // O alvo é 180.
             const currentDartPos = (rotationAngle + dartAttachedAngle) % 360;
             let diff = 180 - currentDartPos; 
             if (diff > 180) diff -= 360; if (diff < -180) diff += 360;
             
-            // Força Gravitacional Forte para evitar parar em cima
+            // Força Gravitacional Agressiva
             const gravityForce = 0.8 * Math.sin(diff * (Math.PI / 180)); 
-            const friction = 0.99; 
+            const friction = 0.985; 
             
             velocity += gravityForce; velocity *= friction; rotationAngle += velocity;
             
-            // Condição de Parada
-            if (Math.abs(velocity) < 0.05 && Math.abs(diff) < 1.0) {
+            // Trava Magnética Final
+            if (Math.abs(velocity) < 0.05 && Math.abs(diff) < 2.0) {
                 mode = 'FINISHED'; 
-                rotationAngle = 180 - dartAttachedAngle; // Snap perfeito
+                rotationAngle = 180 - dartAttachedAngle; // Snap exato
                 finalizarJogo();
             }
         }
@@ -367,9 +361,7 @@
 
     function finalizarJogo() {
         cancelAnimationFrame(animFrame); playWin();
-        // O prêmio já foi determinado no início (targetPrizeIndex), 
-        // e a física garantiu que paramos nele.
-        const premio = premiosAtuais[targetPrizeIndex];
+        const premio = premiosAtuais[targetPrizeIndex]; // Vencedor já definido no arremesso
         
         setTimeout(() => {
             estado.giros++;
@@ -396,10 +388,10 @@
             l.appendChild(d); 
         }); 
     }
-    function adicionarPremio(){ saveM(); premiosAtuais.push({nome:"",cupom:"",peso:10,cor:CORES[premiosAtuais.length%CORES.length]}); renderAdminPremios(); }
+    function adicionarPremio(){ saveM(); premiosAtuais.push({nome:"",cupom:"",peso:0,cor:CORES[premiosAtuais.length%CORES.length]}); renderAdminPremios(); }
     function rmP(i){ if(premiosAtuais.length<=2)return; if(confirm("Remover?")){ saveM(); premiosAtuais.splice(i,1); renderAdminPremios(); } }
     function saveM(){ premiosAtuais.forEach((p,i)=>{ const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value; const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value; const w=document.getElementById(`p-${i}`); if(w) p.peso=parseInt(w.value)||0; }); }
-    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_premios_v20',JSON.stringify(premiosAtuais)); alert("Salvo!"); location.reload(); }
+    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_premios_v21',JSON.stringify(premiosAtuais)); alert("Salvo!"); location.reload(); }
     function renderizarRoleta(){ const w=document.getElementById('roleta-wrapper'); const dardo = document.getElementById('dardo-preso'); w.innerHTML=''; w.appendChild(dardo); const tot=premiosAtuais.length; const arc=360/tot; premiosAtuais.forEach((p,i)=>{ const s=document.createElement('div'); s.className='segmento'; const r=i*arc; const sk=90-arc; s.style.transform=`rotate(${r}deg) skewY(-${sk}deg)`; s.style.backgroundColor=p.cor; const c=document.createElement('div'); c.className='seg-conteudo'; c.style.transform=`skewY(${sk}deg) rotate(${arc/2}deg)`; c.innerHTML=`<span>${p.nome}</span>`; s.appendChild(c); w.appendChild(s); }); }
     function irResgate(){ if(!estado.premioFinal)return; estado.resgatado=true; estado.dataResgate=new Date().toISOString(); salvarEstadoUsuario(); montarTelaResgate(); mostrarTela('tela-resgate'); }
     function montarTelaResgate(){ const p=estado.premioFinal; document.getElementById('resgate-nome').innerText=p.nome; document.getElementById('resgate-cupom').innerText=p.cupom; const d=new Date(estado.dataResgate); d.setDate(d.getDate()+7); document.getElementById('resgate-data').innerText=d.toLocaleDateString('pt-BR'); }
