@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Macellaio Rewards - V30 Link Fix</title>
+    <title>Macellaio Rewards - V31 Clean Link</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         /* --- ESTILOS GERAIS --- */
@@ -47,52 +47,55 @@
             z-index: 5;
         }
         
-        /* Ponteiro Amarelo (TOPO 12h) */
+        /* Ponteiro Amarelo (TOPO 12h - Transparente) */
         #ponteiro { 
             position: absolute; 
             top: -25px; left: 50%; 
             transform: translateX(-50%);
             width: 0; height: 0; 
-            border-left: 25px solid transparent; border-right: 25px solid transparent; border-top: 50px solid var(--gold); 
-            z-index: 25; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5)); 
+            border-left: 25px solid transparent; 
+            border-right: 25px solid transparent; 
+            border-top: 50px solid rgba(255, 193, 7, 0.7); /* Gold com 70% opacidade */
+            z-index: 25; 
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3)); 
         }
 
         .segmento { position: absolute; top: 0; right: 0; width: 50%; height: 50%; transform-origin: 0% 100%; overflow: hidden; }
         .seg-conteudo { position: absolute; left: -100%; width: 200%; height: 200%; text-align: center; padding-top: 40px; font-size: 0.75rem; font-weight: 700; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); display: flex; justify-content: center; }
         .seg-conteudo span { display: block; width: 80px; line-height: 1.1; }
 
-        /* --- NOVO CENTRO: FUNDO PRETO SÓLIDO --- */
+        /* --- NOVO CENTRO: ALVO --- */
         #centro-roleta {
-            position: absolute; top: 50%; left: 50%;
-            width: 60px; height: 60px;
+            position: absolute; top: 48%; left: 50%;
+            width: 50px; height: 50px;
             border-radius: 50%; transform: translate(-50%, -50%); z-index: 10;
-            background: #000; 
-            border: 4px solid #fff; 
-            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+            background: radial-gradient(circle, #d32f2f 0%, #d32f2f 25%, #fff 25%, #fff 50%, #d32f2f 50%, #d32f2f 75%, #fff 75%, #fff 100%);
+            border: 4px solid #000; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
 
         /* --- VISUAIS DO DARDO --- */
         #projectile-dart {
             position: absolute; 
             bottom: -150px; left: 50%; 
-            transform: translateX(-50%); 
-            font-size: 70px; 
+            transform: translateX(-50%) rotate(180deg);
+            font-size: 80px; 
             z-index: 30; display: none; pointer-events: none; 
             filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
         
         @keyframes dartTrajectoryCenter {
             0% { bottom: -150px; transform: translateX(-50%) scale(1.0); opacity: 1; }
-            100% { bottom: 125px; transform: translateX(-50%) scale(1.0); opacity: 1; } 
+            100% { bottom: 140px; transform: translateX(-50%) scale(0.9); opacity: 1; } 
         }
         .flying-dart-anim { animation: dartTrajectoryCenter 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
 
         #dardo-preso {
-            position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: 35; display: none; pointer-events: none;
+            position: absolute; top: 48%; left: 50%; width: 0; height: 0; z-index: 35; display: none; pointer-events: none;
         }
         #dardo-preso::after {
-            content: '🎯'; font-size: 45px; 
-            position: absolute; top: -175px; left: -20px;
+            content: '🎯'; font-size: 70px; 
+            position: absolute; top: -42px; left: -35px;
             filter: drop-shadow(0 5px 8px rgba(0,0,0,0.6));
         }
 
@@ -135,6 +138,7 @@
 
         <div id="roleta-container">
             <div id="ponteiro"></div>
+            
             <div id="roleta-wrapper"></div>
             <div id="centro-roleta"></div>
             <div id="dardo-preso"></div>
@@ -173,12 +177,15 @@
     <div id="tela-admin" class="tela">
         <div class="header-title" style="font-size:1.2rem; margin-top:20px;">ADMINISTRAÇÃO</div>
         <div class="admin-section">
-            <h3>Prêmios & Pesos (Default)</h3>
-            <p style="font-size:0.7rem; color:#aaa;">Configure aqui os prêmios padrões do jogo.</p>
+            <h3>Prêmios & Pesos</h3>
+            <p style="font-size:0.7rem; color:#aaa;">O link gerado usará os prêmios PADRÃO do código (Link Curto). Edite o código para mudar para todos.</p>
+            <div style="display:flex; gap:5px; font-size:0.7rem; color:#888; margin-bottom:5px;">
+                <span class="col-nome">NOME</span><span class="col-cupom">CUPOM</span><span class="col-peso">PESO</span>
+            </div>
             <div id="lista-premios"></div>
             <div style="margin-top:10px; display:flex; gap:10px;">
                 <button onclick="adicionarPremio()" class="btn-add">+ ITEM</button>
-                <button onclick="salvarPremiosAdmin()" class="btn-save">SALVAR</button>
+                <button onclick="salvarPremiosAdmin()" class="btn-save">SALVAR PREMIOS</button>
             </div>
         </div>
         <div class="admin-section">
@@ -246,15 +253,15 @@
     window.onload = function() {
         const params = new URLSearchParams(window.location.search);
         
-        // ADMIN - Carrega do LocalStorage para permitir edição
+        // ADMIN
         if (params.get('admin') === '1' || params.get('admin') === 'true') { 
-            try { const stored = localStorage.getItem('macellaio_admin_config_v30'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } 
+            try { const stored = localStorage.getItem('macellaio_admin_config_v31'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } 
             catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
             abrirAdmin(); return; 
         }
 
-        // CLIENTE - Carrega sempre o DEFAULT_PREMIOS (para link curto funcionar)
-        // Se quiser alterar para todos, edite a constante DEFAULT_PREMIOS no código.
+        // CLIENTE (Link Curto -> Usa Default ou LocalStorage da campanha se já começou)
+        // NOTA: Para link curto funcionar sem DB, ele usa o DEFAULT_PREMIOS do código.
         premiosAtuais = DEFAULT_PREMIOS;
 
         const campanha = params.get('c'); 
@@ -270,7 +277,7 @@
     };
 
     /* ----------------------------------------------------------------
-       3. LÓGICA DO JOGO (BULLSEYE INSTANT LOCK)
+       3. LÓGICA DO JOGO
        ---------------------------------------------------------------- */
     function iniciarGiroMotor() {
         if(estado.giros >= estado.maxGiros) return;
@@ -282,9 +289,11 @@
     function arremessarDardo() {
         if (mode !== 'MOTOR') return;
         document.getElementById('btn-arremessar').classList.add('hidden');
+        
         const projectile = document.getElementById('projectile-dart'); 
         projectile.style.display = 'block'; projectile.classList.add('flying-dart-anim');
         
+        // Sorteio
         let totalPeso = premiosAtuais.reduce((s, p) => s + (parseInt(p.peso) || 0), 0);
         let r = Math.random() * totalPeso;
         let cursor = 0; targetPrizeIndex = 0;
@@ -300,7 +309,7 @@
 
         const segArc = 360 / premiosAtuais.length; 
         const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
-        let targetRotation = 360 - centerSegAngle;
+        let targetRotation = 360 - centerSegAngle; // Alvo TOPO
         
         const currentMod = rotationAngle % 360; 
         let diff = targetRotation - currentMod; 
@@ -320,6 +329,7 @@
         const dardoPreso = document.getElementById('dardo-preso'); 
         dardoPreso.style.display = 'block';
         
+        // Calcula onde bater e trava (topo)
         const segArc = 360 / premiosAtuais.length;
         const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
         rotationAngle = 360 - centerSegAngle;
@@ -361,7 +371,7 @@
         document.getElementById('dardo-preso').style.display = 'none'; document.getElementById('projectile-dart').classList.remove('flying-dart-anim');
     }
 
-    /* --- ADMINISTRAÇÃO & LINK CURTO --- */
+    /* --- ADMIN & LINK --- */
     function verificarSegredo() { segredoClicks++; if(segredoClicks >= 5) { alert("Acesso Admin!"); abrirAdmin(); }}
     function abrirAdmin() { document.getElementById('tela-admin').classList.add('ativa'); document.getElementById('tela-jogo').classList.remove('ativa'); document.getElementById('tela-bloqueio').classList.remove('ativa'); renderAdminPremios(); }
     
@@ -389,15 +399,16 @@
     
     function salvarPremiosAdmin(){ 
         saveM(); 
-        localStorage.setItem('macellaio_admin_config_v30', JSON.stringify(premiosAtuais)); 
-        alert("Configuração Salva no Admin (Local). Para aplicar a todos, edite o código DEFAULT_PREMIOS."); 
+        localStorage.setItem('macellaio_admin_config_v31', JSON.stringify(premiosAtuais)); 
+        alert("Salvo! (Nota: O link curto usará os prêmios do código fonte)"); 
     }
     
+    // --- LINK LIMPO GERADO ---
     function gerarLink(){ 
         const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); 
         if(!n)return alert("Digite nome da campanha"); 
         
-        // Link Curto Limpo
+        // Link limpo, sem data
         const u=`${location.origin}${location.pathname}?c=${n}`; 
         document.getElementById('resultado-link').style.display='block'; 
         document.getElementById('resultado-link').innerHTML=`Link Curto:<br><a href="${u}" style="color:#fff; word-break:break-all;">${u}</a>`; 
