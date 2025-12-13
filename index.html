@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Macellaio Rewards - V22 Top Fix</title>
+    <title>Macellaio Rewards - V24 Gravity</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         /* --- ESTILOS GERAIS --- */
@@ -47,27 +47,15 @@
             z-index: 5;
         }
         
-        /* CORREÇÃO: Ponteiro Amarelo no TOPO (12h) */
-        #ponteiro { 
-            position: absolute; 
-            top: -25px; /* Fixado no topo */
-            left: 50%; 
-            transform: translateX(-50%); /* Removemos a rotação de 180deg */
-            width: 0; height: 0; 
-            /* Triângulo apontando para baixo */
-            border-left: 25px solid transparent; 
-            border-right: 25px solid transparent; 
-            border-top: 50px solid var(--gold); 
-            z-index: 25; 
-            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5)); 
-        }
+        /* PONTEIRO REMOVIDO (O Dardo é o ponteiro) */
+        #ponteiro { display: none; }
 
         .segmento { position: absolute; top: 0; right: 0; width: 50%; height: 50%; transform-origin: 0% 100%; overflow: hidden; }
         .seg-conteudo { position: absolute; left: -100%; width: 200%; height: 200%; text-align: center; padding-top: 40px; font-size: 0.75rem; font-weight: 700; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); display: flex; justify-content: center; }
         .seg-conteudo span { display: block; width: 80px; line-height: 1.1; }
         #centro-roleta { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background: #222; border: 4px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; }
 
-        /* --- VISUAIS DO DARDO (Trajetória ajustada para o Topo) --- */
+        /* --- VISUAIS DO DARDO --- */
         #projectile-dart {
             position: absolute; 
             bottom: -150px; left: 50%; 
@@ -79,18 +67,16 @@
             filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
         
-        /* Animação: Dardo voa de baixo até o TOPO da roleta */
+        /* Animação: Voa até o TOPO (12h) para impactar */
         @keyframes dartTrajectory {
             0% { bottom: -150px; transform: translateX(-50%) rotate(180deg) scale(1.2); opacity: 1; }
-            100% { bottom: 280px; transform: translateX(-50%) rotate(180deg) scale(0.9); opacity: 1; } /* 280px ~ Topo */
+            100% { bottom: 280px; transform: translateX(-50%) rotate(180deg) scale(0.9); opacity: 1; } 
         }
         .flying-dart-anim { animation: dartTrajectory 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
 
         /* Dardo PRESO na roleta */
         #dardo-preso {
-            position: absolute; top: 50%; left: 50%;
-            width: 0; height: 0; 
-            z-index: 20; display: none;
+            position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: 20; display: none;
         }
         #dardo-preso::after {
             content: '🎯'; font-size: 45px; 
@@ -116,7 +102,7 @@
         .aviso-legal { font-size: 0.65rem; color: #666; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; width: 100%; }
 
         /* ADMIN */
-        #tela-admin { justify-content: flex-start; padding-top: 40px; background: #0a0a0a; z-index: 200; overflow-y: auto; }
+        #tela-admin { justify-content: flex-start; padding-top: 20px; background: #0a0a0a; z-index: 200; overflow-y: auto; }
         .admin-section { background: #1c1c1c; width: 95%; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333; }
         .premio-row { display: flex; gap: 5px; margin-bottom: 10px; align-items: center; }
         .input-admin { background: #fff; color: #333; border: 1px solid #ccc; padding: 8px; border-radius: 4px; width: 100%; }
@@ -141,7 +127,6 @@
             <div id="roleta-wrapper">
                 <div id="dardo-preso"></div>
             </div>
-            <div id="ponteiro"></div>
             <div id="centro-roleta"></div>
             <div id="projectile-dart">🎯</div>
         </div>
@@ -178,19 +163,22 @@
     <div id="tela-admin" class="tela">
         <div class="header-title" style="font-size:1.2rem; margin-top:20px;">ADMINISTRAÇÃO</div>
         <div class="admin-section">
-            <h3>Criar Campanha</h3>
-            <input type="text" id="campanha-nome" class="input-admin" placeholder="Nome">
-            <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK</button>
-            <div id="resultado-link" class="link-result"></div>
-        </div>
-        <div class="admin-section">
-            <h3>Prêmios & Pesos</h3>
-            <p style="font-size:0.7rem; color:#aaa;">Probabilidade se aplica a cada giro individualmente.</p>
+            <h3>Prêmios & Pesos (Mestre)</h3>
+            <p style="font-size:0.7rem; color:#aaa;">O link gerado HERDA estes pesos.</p>
+            <div style="display:flex; gap:5px; font-size:0.7rem; color:#888; margin-bottom:5px;">
+                <span class="col-nome">NOME</span><span class="col-cupom">CUPOM</span><span class="col-peso">PESO</span>
+            </div>
             <div id="lista-premios"></div>
             <div style="margin-top:10px; display:flex; gap:10px;">
                 <button onclick="adicionarPremio()" class="btn-add">+ ITEM</button>
-                <button onclick="salvarPremiosAdmin()" class="btn-save">SALVAR</button>
+                <button onclick="salvarPremiosAdmin()" class="btn-save">SALVAR PREMIOS</button>
             </div>
+        </div>
+        <div class="admin-section">
+            <h3>Gerar Campanha</h3>
+            <input type="text" id="campanha-nome" class="input-admin" placeholder="Nome da Campanha">
+            <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK</button>
+            <div id="resultado-link" class="link-result"></div>
         </div>
         <br><br>
     </div>
@@ -250,13 +238,31 @@
     // Sync vars
     let flyingFrames = 0;
 
-    try { const stored = localStorage.getItem('macellaio_premios_v22'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
-
     window.onload = function() {
         const params = new URLSearchParams(window.location.search);
-        if (params.get('admin') === '1' || params.get('admin') === 'true') { abrirAdmin(); return; }
-        const campanha = params.get('c'); if (!campanha) { mostrarTela('tela-bloqueio'); return; }
-        estado.campanha = campanha; carregarEstadoUsuario();
+        
+        // ADMIN
+        if (params.get('admin') === '1' || params.get('admin') === 'true') { 
+            try { const stored = localStorage.getItem('macellaio_admin_config'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } 
+            catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
+            abrirAdmin(); return; 
+        }
+
+        // CLIENTE (Link Data)
+        const encodedData = params.get('d');
+        if (encodedData) {
+            try { premiosAtuais = JSON.parse(decodeURIComponent(atob(encodedData))); } 
+            catch(e) { premiosAtuais = DEFAULT_PREMIOS; }
+        } else {
+            premiosAtuais = DEFAULT_PREMIOS;
+        }
+
+        const campanha = params.get('c'); 
+        if (!campanha) { mostrarTela('tela-bloqueio'); return; }
+        
+        estado.campanha = campanha; 
+        carregarEstadoUsuario();
+        
         if (estado.resgatado || (estado.giros >= estado.maxGiros && estado.premioFinal)) {
             if(!estado.resgatado) { estado.resgatado = true; if(!estado.dataResgate) estado.dataResgate = new Date().toISOString(); salvarEstadoUsuario(); }
             montarTelaResgate(); mostrarTela('tela-resgate');
@@ -264,7 +270,7 @@
     };
 
     /* ----------------------------------------------------------------
-       3. LÓGICA DO JOGO (FÍSICA 12h TOPO)
+       3. LÓGICA DO JOGO (GRAVITY MASTER: Hit 12h -> Pull to 6h)
        ---------------------------------------------------------------- */
     function iniciarGiroMotor() {
         if(estado.giros >= estado.maxGiros) return;
@@ -281,26 +287,24 @@
         projectile.style.display = 'block'; projectile.classList.add('flying-dart-anim');
         
         // --- SORTEIO PONDERADO ---
-        let totalPeso = premiosAtuais.reduce((s, p) => s + (parseInt(p.peso)||0), 0);
+        let totalPeso = premiosAtuais.reduce((s, p) => s + (parseInt(p.peso) || 0), 0);
         let r = Math.random() * totalPeso;
         let cursor = 0; targetPrizeIndex = 0;
         
         if (totalPeso > 0) {
             for(let i=0; i<premiosAtuais.length; i++) { 
-                cursor += (parseInt(premiosAtuais[i].peso)||0); 
+                cursor += (parseInt(premiosAtuais[i].peso) || 0); 
                 if(r < cursor) { targetPrizeIndex = i; break; } 
             }
         } else {
             targetPrizeIndex = Math.floor(Math.random() * premiosAtuais.length);
         }
 
-        // CÁLCULO DE ALVO (Alinhar 12h - TOPO - Ângulo 360/0)
+        // CÁLCULO DE ALVO (Alinhar 12h no Impacto)
         const segArc = 360 / premiosAtuais.length; 
         const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
         
-        // O alvo de rotação da roleta para que esse segmento esteja no TOPO (0deg visual):
-        // Visual Rotation = (Local Segment Angle + Wheel Rotation) = 0 (ou 360)
-        // Wheel Rotation = 360 - Local Segment Angle
+        // Alvo de rotação para impacto no TOPO (360/0deg)
         let targetRotation = 360 - centerSegAngle;
         
         const currentMod = rotationAngle % 360; 
@@ -323,14 +327,16 @@
         const dardoPreso = document.getElementById('dardo-preso'); 
         dardoPreso.style.display = 'block';
         
-        // Cálculo do Ponto de Impacto
-        // O dardo bateu no TOPO (360/0 deg). 
-        // A roleta está em 'rotationAngle'.
+        // O dardo bateu no TOPO (0deg visual).
+        // Rotação atual da roleta = rotationAngle.
+        // Ângulo relativo de fixação = 360 - rotationAngle
         dartAttachedAngle = 360 - rotationAngle;
         
-        // VISUAL FIXO (Mais próximo da borda para não cobrir texto)
-        // translate Y 145px (raio do container 160px - margem)
+        // Fixa visualmente (raio 145px)
         dardoPreso.style.transform = `rotate(${dartAttachedAngle}deg) translate(0, 145px)`;
+        
+        // Nota: velocity continua alta, a inércia continua.
+        // A física agora deve puxar esse peso para 180deg (Baixo).
     }
 
     function loopFisica() {
@@ -346,27 +352,24 @@
             if (flyingFrames <= 0) impactoDardo();
         }
         else if (mode === 'PENDULUM') {
-            // IMÃ MAGNÉTICO PARA 12H (TOPO)
-            // O dardo está em (rotationAngle + dartAttachedAngle)
-            // O alvo é 360 (ou 0).
+            // FÍSICA: Gravidade puxa o DARDO para 180 (Baixo)
             const currentDartPos = (rotationAngle + dartAttachedAngle) % 360;
-            let diff = 360 - currentDartPos; 
+            let diff = 180 - currentDartPos; // Alvo é 180
             
-            // Corrige para o menor caminho (-180 a 180)
-            if (diff > 180) diff -= 360; 
-            if (diff < -180) diff += 360;
+            if (diff > 180) diff -= 360; if (diff < -180) diff += 360;
             
-            // Força "Gravitacional" (Magnetic Lock) para o topo
-            // Usamos Math.sin para criar oscilação suave em torno do 0
+            // Gravidade forte puxando para baixo
             const gravityForce = 0.8 * Math.sin(diff * (Math.PI / 180)); 
             const friction = 0.985; 
             
             velocity += gravityForce; velocity *= friction; rotationAngle += velocity;
             
-            // Trava Magnética Final
+            // Trava Magnética no Fundo (180deg)
             if (Math.abs(velocity) < 0.05 && Math.abs(diff) < 2.0) {
                 mode = 'FINISHED'; 
-                rotationAngle = 360 - dartAttachedAngle; // Snap exato no topo
+                // Para que o dardo (at attachedAngle) esteja em 180 visual:
+                // rotation + attached = 180 => rotation = 180 - attached
+                rotationAngle = 180 - dartAttachedAngle; 
                 finalizarJogo();
             }
         }
@@ -392,9 +395,10 @@
         document.getElementById('dardo-preso').style.display = 'none'; document.getElementById('projectile-dart').classList.remove('flying-dart-anim');
     }
 
-    /* --- ADMIN & UTILS --- */
+    /* --- ADMINISTRAÇÃO & LINK --- */
     function verificarSegredo() { segredoClicks++; if(segredoClicks >= 5) { alert("Acesso Admin!"); abrirAdmin(); }}
     function abrirAdmin() { document.getElementById('tela-admin').classList.add('ativa'); document.getElementById('tela-jogo').classList.remove('ativa'); document.getElementById('tela-bloqueio').classList.remove('ativa'); renderAdminPremios(); }
+    
     function renderAdminPremios() { 
         const l = document.getElementById('lista-premios'); l.innerHTML=''; 
         premiosAtuais.forEach((p,i)=>{ 
@@ -403,10 +407,40 @@
             l.appendChild(d); 
         }); 
     }
+    
     function adicionarPremio(){ saveM(); premiosAtuais.push({nome:"",cupom:"",peso:0,cor:CORES[premiosAtuais.length%CORES.length]}); renderAdminPremios(); }
     function rmP(i){ if(premiosAtuais.length<=2)return; if(confirm("Remover?")){ saveM(); premiosAtuais.splice(i,1); renderAdminPremios(); } }
-    function saveM(){ premiosAtuais.forEach((p,i)=>{ const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value; const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value; const w=document.getElementById(`p-${i}`); if(w) p.peso=parseInt(w.value)||0; }); }
-    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_premios_v22',JSON.stringify(premiosAtuais)); alert("Salvo!"); location.reload(); }
+    
+    function saveM(){ 
+        premiosAtuais.forEach((p,i)=>{ 
+            const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value; 
+            const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value; 
+            const w=document.getElementById(`p-${i}`); 
+            let wVal = parseInt(w.value);
+            if(isNaN(wVal)) wVal = 0;
+            p.peso = wVal; 
+        }); 
+    }
+    
+    function salvarPremiosAdmin(){ 
+        saveM(); 
+        localStorage.setItem('macellaio_admin_config', JSON.stringify(premiosAtuais)); 
+        alert("Salvo! Gere o link agora."); 
+    }
+    
+    function gerarLink(){ 
+        const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); 
+        if(!n)return alert("Digite nome da campanha"); 
+        
+        saveM();
+        const jsonConfig = JSON.stringify(premiosAtuais);
+        const encodedConfig = btoa(encodeURIComponent(jsonConfig));
+        
+        const u=`${location.origin}${location.pathname}?c=${n}&d=${encodedConfig}`; 
+        document.getElementById('resultado-link').style.display='block'; 
+        document.getElementById('resultado-link').innerHTML=`Link Seguro:<br><a href="${u}" style="color:#fff; word-break:break-all;">${u}</a>`; 
+    }
+
     function renderizarRoleta(){ const w=document.getElementById('roleta-wrapper'); const dardo = document.getElementById('dardo-preso'); w.innerHTML=''; w.appendChild(dardo); const tot=premiosAtuais.length; const arc=360/tot; premiosAtuais.forEach((p,i)=>{ const s=document.createElement('div'); s.className='segmento'; const r=i*arc; const sk=90-arc; s.style.transform=`rotate(${r}deg) skewY(-${sk}deg)`; s.style.backgroundColor=p.cor; const c=document.createElement('div'); c.className='seg-conteudo'; c.style.transform=`skewY(${sk}deg) rotate(${arc/2}deg)`; c.innerHTML=`<span>${p.nome}</span>`; s.appendChild(c); w.appendChild(s); }); }
     function irResgate(){ if(!estado.premioFinal)return; estado.resgatado=true; estado.dataResgate=new Date().toISOString(); salvarEstadoUsuario(); montarTelaResgate(); mostrarTela('tela-resgate'); }
     function montarTelaResgate(){ const p=estado.premioFinal; document.getElementById('resgate-nome').innerText=p.nome; document.getElementById('resgate-cupom').innerText=p.cupom; const d=new Date(estado.dataResgate); d.setDate(d.getDate()+7); document.getElementById('resgate-data').innerText=d.toLocaleDateString('pt-BR'); }
@@ -415,7 +449,6 @@
     function getKey(){ return `macellaio_user_${estado.campanha}`; }
     function salvarEstadoUsuario(){ localStorage.setItem(getKey(), JSON.stringify(estado)); }
     function carregarEstadoUsuario(){ const s=localStorage.getItem(getKey()); if(s)Object.assign(estado, JSON.parse(s)); }
-    function gerarLink(){ const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); if(!n)return alert("Digite nome"); const u=`${location.origin}${location.pathname}?c=${n}`; document.getElementById('resultado-link').style.display='block'; document.getElementById('resultado-link').innerHTML=`<a href="${u}" style="color:#fff">${u}</a>`; }
     function copiarCodigo(){ navigator.clipboard.writeText(document.getElementById('resgate-cupom').innerText); alert("Copiado!"); }
 </script>
 </body>
