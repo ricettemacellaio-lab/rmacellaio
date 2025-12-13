@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Macellaio Rewards - V16</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* --- ESTILOS GERAIS --- */
+        :root {
+            --gold: #FFC107; --gold-dark: #FFB300;
+            --bg-page: #0f0f0f; --bg-panel: #1E1E1E;
+            --text-main: #ffffff;
+            --danger: #d32f2f;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { height: 100%; margin: 0; font-family: 'Roboto', sans-serif; background: #000; color: var(--text-main); overflow: hidden; }
+        
+        #app-container {
+            width: 100%; height: 100%; max-width: 500px; margin: 0 auto;
+            position: relative; background: var(--bg-page); display: flex; flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.7);
+        }
+        #fundo-overlay {
+            position: absolute; width: 100%; height: 100%; top:0; left:0;
+            background: url('https://img.freepik.com/fotos-gratis/hamburguer-vista-frontal-em-tua-de-madeira-escura_23-2148234991.jpg') center/cover;
+            opacity: 0.2; pointer-events: none; z-index: 0;
+        }
+        main { flex: 1; position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+
+        /* HEADER */
+        .header-title { 
+            color: var(--gold); font-size: 1.8rem; font-weight: 900; 
+            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; 
+            text-shadow: 0 4px 10px rgba(0,0,0,0.9); text-align: center;
+            cursor: pointer; /* Indicativo de clique para o segredo */
+            user-select: none;
+        }
+        .status-pill { border: 1px solid var(--gold); color: var(--gold); padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; margin-bottom: 20px; background: rgba(0,0,0,0.8); }
+        
+        /* --- ROLETA --- */
+        #roleta-container { position: relative; width: 320px; height: 320px; margin-bottom: 60px; }
+        
+        #roleta-wrapper {
+            width: 100%; height: 100%; border-radius: 50%; position: relative; overflow: hidden;
+            border: 8px solid #fff; box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            transform: rotate(0deg);
+        }
+        
+        #ponteiro { 
+            position: absolute; bottom: -25px; left: 50%; 
+            transform: translateX(-50%) rotate(180deg);
+            width: 0; height: 0; 
+            border-left: 25px solid transparent; border-right: 25px solid transparent; border-top: 50px solid var(--gold); 
+            z-index: 20; filter: drop-shadow(0 -4px 4px rgba(0,0,0,0.5)); 
+        }
+
+        .segmento { position: absolute; top: 0; right: 0; width: 50%; height: 50%; transform-origin: 0% 100%; overflow: hidden; }
+        .seg-conteudo { position: absolute; left: -100%; width: 200%; height: 200%; text-align: center; padding-top: 40px; font-size: 0.75rem; font-weight: 700; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); display: flex; justify-content: center; }
+        .seg-conteudo span { display: block; width: 80px; line-height: 1.1; }
+        #centro-roleta { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background: #222; border: 4px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; }
+
+        /* --- VISUAIS --- */
+        #projectile-dart {
+            position: absolute; bottom: -100px; left: 50%; transform: translateX(-50%) rotate(180deg);
+            font-size: 50px; z-index: 100; display: none; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+        }
+        @keyframes dartTrajectory {
+            0% { bottom: -150px; transform: translateX(-50%) rotate(180deg) scale(1.2); opacity: 1; }
+            100% { bottom: 40px; transform: translateX(-50%) rotate(180deg) scale(0.8); opacity: 1; }
+        }
+        .flying-dart-anim { animation: dartTrajectory 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
+
+        #dardo-preso {
+            position: absolute; width: 20px; height: 20px; z-index: 15; display: none;
+        }
+        #dardo-preso::after {
+            content: '🗡️'; font-size: 50px; position: absolute; top: -25px; left: -18px; transform: rotate(180deg); filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
+        }
+
+        /* BOTÕES */
+        .btn-gold { background: var(--gold); color: #000; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; border: none; padding: 18px 0; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 193, 7, 0.4); width: 85%; max-width: 300px; transition: transform 0.1s; position: relative; z-index: 101; }
+        .btn-gold:active { transform: scale(0.96); }
+        .btn-throw { background: #E91E63; color: white; box-shadow: 0 0 20px rgba(233, 30, 99, 0.5); }
+        .btn-outline { background: transparent; border: 2px solid #555; color: #fff; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+
+        /* TELAS */
+        .tela { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
+        .tela.ativa { display: flex; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .resgate-card { background: var(--bg-panel); padding: 30px 20px; border-radius: 15px; border: 1px solid #333; text-align: center; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        .cupom-box { background: #000; border: 2px dashed var(--gold); color: var(--gold); font-size: 2.2rem; padding: 15px; margin: 20px 0; font-weight: 900; letter-spacing: 2px; border-radius: 8px; }
+        .aviso-legal { font-size: 0.65rem; color: #666; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; width: 100%; }
+
+        /* ADMIN */
+        #tela-admin { justify-content: flex-start; padding-top: 40px; background: #0a0a0a; z-index: 200; overflow-y: auto; }
+        .admin-section { background: #1c1c1c; width: 95%; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333; }
+        .premio-row { display: flex; gap: 5px; margin-bottom: 10px; align-items: center; }
+        .input-admin { background: #fff; color: #333; border: 1px solid #ccc; padding: 8px; border-radius: 4px; width: 100%; }
+        .col-nome { flex: 2; } .col-cupom { flex: 1.5; } .col-peso { flex: 0.8; }
+        .btn-remove { background: var(--danger); color: white; border: none; width: 30px; height: 30px; border-radius: 4px; font-weight: bold; }
+        .btn-add, .btn-save { border: none; padding: 10px; width: 48%; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        .btn-add { background: #e0e0e0; color: #333; } .btn-save { background: #900; color: #fff; }
+        .hidden { display: none !important; }
+        .link-result { margin-top:10px; padding:10px; background:#004d40; color:#fff; font-size:0.8rem; border-radius:5px; word-break:break-all; display:none; }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <div id="fundo-overlay"></div>
+
+    <div id="tela-jogo" class="tela">
+        <div class="header-title" onclick="verificarSegredo()">MACELLAIO REWARDS</div>
+        <div class="status-pill" id="contador-giros">Carregando...</div>
+
+        <div id="roleta-container">
+            <div id="roleta-wrapper">
+                <div id="dardo-preso"></div>
+            </div>
+            <div id="ponteiro"></div>
+            <div id="centro-roleta"></div>
+            <div id="projectile-dart">🗡️</div>
+        </div>
+
+        <button id="btn-girar" class="btn-gold" onclick="iniciarGiroMotor()">GIRAR ROLETA</button>
+        <button id="btn-arremessar" class="btn-gold btn-throw hidden" onclick="arremessarDardo()">ATIRAR DARDO!</button>
+
+        <div id="msg-resultado" class="hidden" style="margin-top:20px; text-align:center;">
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:5px;">O peso parou em:</p>
+            <h3 id="txt-premio-atual" style="color:var(--gold); font-size:1.5rem; margin:0 0 20px 0;">...</h3>
+            <button id="btn-resgatar-home" class="btn-gold" style="padding:12px 30px; font-size:0.9rem; width:auto;" onclick="irResgate()">RESGATAR</button>
+            <button id="btn-girar-dnv" class="btn-outline" style="margin-left:10px;" onclick="resetarJogo()">GIRAR DE NOVO</button>
+        </div>
+    </div>
+
+    <div id="tela-resgate" class="tela">
+        <div class="resgate-card">
+            <h2 style="color:var(--gold); margin:0;">🎉 PARABÉNS!</h2>
+            <p style="color:#aaa; font-size:0.9rem;">Seu prêmio foi garantido.</p>
+            <h3 id="resgate-nome" style="font-size:1.4rem; margin:15px 0 5px 0;">...</h3>
+            <div class="cupom-box" id="resgate-cupom">...</div>
+            <p style="font-size:0.8rem; color:#888; margin-bottom:20px;">Válido até: <span id="resgate-data"></span></p>
+            <button onclick="copiarCodigo()" class="btn-gold" style="width:100%; margin-bottom:10px;">COPIAR CÓDIGO</button>
+            <a href="https://www.rmacellaio.com.br" target="_blank" class="btn-gold" style="background:#333; color:#fff; width:100%; line-height:50px; padding:0;">RESGATAR AGORA</a>
+            <div class="aviso-legal">Atenção: Este prêmio é único e vinculado ao seu cadastro.</div>
+        </div>
+    </div>
+
+    <div id="tela-bloqueio" class="tela">
+        <h2 style="color:var(--danger);">LINK INVÁLIDO</h2>
+        <p style="color:#ccc; text-align:center;">Campanha finalizada.</p>
+    </div>
+
+    <div id="tela-admin" class="tela">
+        <div class="header-title" style="font-size:1.2rem; margin-top:20px;">ADMINISTRAÇÃO</div>
+        
+        <div class="admin-section">
+            <h3>Criar Campanha</h3>
+            <input type="text" id="campanha-nome" class="input-admin" placeholder="Nome">
+            <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK</button>
+            <div id="resultado-link" class="link-result"></div>
+        </div>
+        
+        <div class="admin-section">
+            <h3>Prêmios (Probabilidade)</h3>
+            <div style="display:flex; gap:5px; font-size:0.7rem; color:#888;">
+                <span class="col-nome">NOME</span><span class="col-cupom">CUPOM</span><span class="col-peso">PESO</span>
+            </div>
+            <div id="lista-premios"></div>
+            <div style="margin-top:10px; display:flex; gap:10px;">
+                <button onclick="adicionarPremio()" class="btn-add">+ ITEM</button>
+                <button onclick="salvarPremiosAdmin()" class="btn-save">SALVAR</button>
+            </div>
+        </div>
+        <br><br>
+    </div>
+</div>
+
+<script>
+    /* ----------------------------------------------------------------
+       1. ENGINE DE ÁUDIO
+       ---------------------------------------------------------------- */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let spinOscillator = null;
+    let spinGain = null;
+
+    function startSpinSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (spinOscillator) return; 
+        spinOscillator = audioCtx.createOscillator();
+        spinGain = audioCtx.createGain();
+        spinOscillator.connect(spinGain);
+        spinGain.connect(audioCtx.destination);
+        spinOscillator.type = 'sawtooth';
+        spinOscillator.frequency.setValueAtTime(50, audioCtx.currentTime);
+        spinGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        spinOscillator.start();
+    }
+
+    function stopSpinSound() {
+        if (spinOscillator) {
+            spinGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
+            spinOscillator.stop(audioCtx.currentTime + 0.05);
+            spinOscillator = null; spinGain = null;
+        }
+    }
+    
+    function playThud() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.type = 'square';
+        osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+    }
+    
+    function playWin() {
+        const now = audioCtx.currentTime;
+        [523, 659, 784, 1046].forEach((f,i) => {
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination); o.frequency.value = f;
+            g.gain.setValueAtTime(0, now+i*0.1);
+            g.gain.linearRampToValueAtTime(0.2, now+i*0.1+0.1);
+            g.gain.exponentialRampToValueAtTime(0.001, now+i*0.1+1.5);
+            o.start(now+i*0.1); o.stop(now+i*0.1+1.5);
+        });
+    }
+
+    /* ----------------------------------------------------------------
+       2. DADOS E INICIALIZAÇÃO
+       ---------------------------------------------------------------- */
+    const DEFAULT_PREMIOS = [
+        { nome: "10% OFF", cupom: "DESC10", cor: "#e53935", peso: 10 },
+        { nome: "Frete Grátis", cupom: "FREE", cor: "#43A047", peso: 5 },
+        { nome: "BOGO", cupom: "BOGO", cor: "#8E24AA", peso: 2 },
+        { nome: "Sobremesa", cupom: "DOCE", cor: "#FB8C00", peso: 10 },
+        { nome: "5% OFF", cupom: "DESC05", cor: "#FDD835", peso: 20 },
+        { nome: "Tente de Novo", cupom: "", cor: "#78909C", peso: 50 } 
+    ];
+    const CORES = ["#e53935", "#43A047", "#1E88E5", "#FB8C00", "#8E24AA", "#00ACC1", "#FDD835", "#78909C"];
+
+    let premiosAtuais;
+    let estado = { campanha: null, giros: 0, maxGiros: 3, resgatado: false, premioFinal: null, dataResgate: null };
+    let rotationAngle = 0, velocity = 0, mode = 'IDLE', animFrame = null, dartAttachedAngle = 0, targetPrizeIndex = -1;
+    let segredoClicks = 0;
+
+    // --- CARREGAMENTO SEGURO ---
+    try {
+        const stored = localStorage.getItem('macellaio_premios_v16');
+        premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS;
+    } catch (e) {
+        console.warn("Resetando dados corrompidos");
+        premiosAtuais = DEFAULT_PREMIOS;
+    }
+
+    window.onload = function() {
+        const params = new URLSearchParams(window.location.search);
+        
+        // 1. CHECAGEM DE ADMIN (Prioridade Alta)
+        const adminParam = params.get('admin');
+        if (adminParam === '1' || adminParam === 'true') {
+            abrirAdmin();
+            return;
+        }
+
+        // 2. CHECAGEM DE USUÁRIO
+        const campanha = params.get('c');
+        if (!campanha) {
+            mostrarTela('tela-bloqueio'); return;
+        }
+        estado.campanha = campanha;
+        carregarEstadoUsuario();
+
+        // 3. ROTEAMENTO DE ESTADO DO JOGO
+        if (estado.resgatado) {
+            montarTelaResgate();
+            mostrarTela('tela-resgate');
+        } 
+        else if (estado.giros >= estado.maxGiros && estado.premioFinal) {
+            estado.resgatado = true;
+            if(!estado.dataResgate) estado.dataResgate = new Date().toISOString();
+            salvarEstadoUsuario();
+            montarTelaResgate();
+            mostrarTela('tela-resgate');
+        } else {
+            renderizarRoleta();
+            atualizarUI();
+            mostrarTela('tela-jogo');
+        }
+    };
+
+    /* ----------------------------------------------------------------
+       3. LÓGICA DO JOGO (FÍSICA)
+       ---------------------------------------------------------------- */
+    function iniciarGiroMotor() {
+        if(estado.giros >= estado.maxGiros) return;
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        document.getElementById('btn-girar').classList.add('hidden');
+        document.getElementById('btn-arremessar').classList.remove('hidden');
+        mode = 'MOTOR'; velocity = 0; loopFisica(); startSpinSound();
+    }
+
+    function arremessarDardo() {
+        if (mode !== 'MOTOR') return;
+        document.getElementById('btn-arremessar').classList.add('hidden');
+        
+        // Visual
+        const projectile = document.getElementById('projectile-dart');
+        projectile.style.display = 'block';
+        projectile.classList.add('flying-dart-anim');
+        
+        // Sorteio Seguro
+        let totalPeso = premiosAtuais.reduce((s, p) => s + (parseInt(p.peso)||0), 0);
+        let r = Math.random() * totalPeso;
+        let cursor = 0;
+        targetPrizeIndex = 0;
+        for(let i=0; i<premiosAtuais.length; i++) {
+            cursor += (parseInt(premiosAtuais[i].peso)||0);
+            if(r < cursor) { targetPrizeIndex = i; break; }
+        }
+
+        // Ajuste Magnético
+        const segArc = 360 / premiosAtuais.length;
+        const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
+        let targetRotation = 180 - centerSegAngle; 
+        const currentMod = rotationAngle % 360;
+        let diff = targetRotation - currentMod;
+        if (diff < 0) diff += 360; 
+        const framesToImpact = 22; // ~350ms
+        const distanceNeeded = diff + 360; 
+        velocity = distanceNeeded / framesToImpact;
+
+        setTimeout(impactoDardo, 350); 
+    }
+
+    function impactoDardo() {
+        mode = 'PENDULUM';
+        stopSpinSound();
+        playThud();
+        document.getElementById('projectile-dart').style.display = 'none';
+        const dardoPreso = document.getElementById('dardo-preso');
+        dardoPreso.style.display = 'block';
+        dartAttachedAngle = 180 - rotationAngle;
+        dardoPreso.style.transform = `rotate(${dartAttachedAngle}deg) translate(0, 140px)`;
+    }
+
+    function loopFisica() {
+        if (mode === 'IDLE') return;
+        if (mode === 'MOTOR') {
+            if (velocity < 22) velocity += 0.6;
+            rotationAngle += velocity;
+        }
+        else if (mode === 'PENDULUM') {
+            const currentDartVisualPos = (rotationAngle + dartAttachedAngle) % 360;
+            let diff = 180 - currentDartVisualPos;
+            if (diff > 180) diff -= 360;
+            if (diff < -180) diff += 360;
+            
+            const gravityForce = 0.5 * Math.sin(diff * (Math.PI / 180));
+            const friction = 0.993; 
+            velocity += gravityForce;
+            velocity *= friction;
+            rotationAngle += velocity;
+            
+            if (Math.abs(velocity) < 0.03 && Math.abs(diff) < 1) {
+                mode = 'FINISHED';
+                rotationAngle = 180 - dartAttachedAngle; 
+                finalizarJogo();
+            }
+        }
+        const wrapper = document.getElementById('roleta-wrapper');
+        wrapper.style.transform = `rotate(${rotationAngle}deg)`;
+        animFrame = requestAnimationFrame(loopFisica);
+    }
+
+    function finalizarJogo() {
+        cancelAnimationFrame(animFrame);
+        playWin();
+        const premio = premiosAtuais[targetPrizeIndex];
+        setTimeout(() => {
+            estado.giros++;
+            if (!premio.cupom || premio.cupom.trim() === "") {
+                document.getElementById('txt-premio-atual').innerText = "Não foi dessa vez!";
+                estado.premioFinal = null;
+            } else {
+                estado.premioFinal = premio;
+                document.getElementById('txt-premio-atual').innerText = premio.nome;
+                if (estado.giros >= estado.maxGiros) {
+                   if(!estado.resgatado) { estado.resgatado=true; estado.dataResgate=new Date().toISOString(); salvarEstadoUsuario(); }
+                }
+            }
+            salvarEstadoUsuario();
+            atualizarUI();
+            document.getElementById('msg-resultado').classList.remove('hidden');
+            if (estado.giros >= estado.maxGiros) {
+                document.getElementById('btn-girar-dnv').classList.add('hidden');
+                if (!estado.premioFinal) document.getElementById('btn-resgatar-home').classList.add('hidden');
+            }
+        }, 800);
+    }
+    
+    function resetarJogo() {
+        if(estado.giros >= estado.maxGiros) return;
+        document.getElementById('msg-resultado').classList.add('hidden');
+        document.getElementById('btn-girar').classList.remove('hidden');
+        document.getElementById('dardo-preso').style.display = 'none';
+        document.getElementById('projectile-dart').classList.remove('flying-dart-anim');
+    }
+
+    /* --- ADMIN & UTILS --- */
+    function verificarSegredo() {
+        segredoClicks++;
+        if(segredoClicks >= 5) {
+            alert("Acesso Administrativo Liberado!");
+            abrirAdmin();
+        }
+    }
+
+    function abrirAdmin() {
+        document.getElementById('tela-admin').classList.add('ativa');
+        document.getElementById('tela-jogo').classList.remove('ativa');
+        document.getElementById('tela-bloqueio').classList.remove('ativa');
+        renderAdminPremios();
+    }
+
+    function renderAdminPremios() {
+        const l = document.getElementById('lista-premios'); l.innerHTML='';
+        premiosAtuais.forEach((p,i)=>{
+            const d=document.createElement('div'); d.className='premio-row';
+            d.innerHTML=`<input type="text" class="input-admin col-nome" value="${p.nome}" id="n-${i}"><input type="text" class="input-admin col-cupom" value="${p.cupom}" id="c-${i}"><input type="number" class="input-admin col-peso" value="${p.peso||10}" id="p-${i}"><button class="btn-remove" onclick="rmP(${i})">X</button>`;
+            l.appendChild(d);
+        });
+    }
+    function adicionarPremio(){ saveM(); premiosAtuais.push({nome:"",cupom:"",peso:10,cor:CORES[premiosAtuais.length%CORES.length]}); renderAdminPremios(); }
+    function rmP(i){ if(premiosAtuais.length<=2)return; if(confirm("Remover?")){ saveM(); premiosAtuais.splice(i,1); renderAdminPremios(); } }
+    function saveM(){ premiosAtuais.forEach((p,i)=>{ 
+        const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value;
+        const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value;
+        const w=document.getElementById(`p-${i}`); if(w) p.peso=parseInt(w.value)||0;
+    }); }
+    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_premios_v16',JSON.stringify(premiosAtuais)); alert("Salvo!"); location.reload(); }
+    
+    function renderizarRoleta(){
+        const w=document.getElementById('roleta-wrapper'); 
+        const dardo = document.getElementById('dardo-preso');
+        w.innerHTML=''; w.appendChild(dardo);
+        const tot=premiosAtuais.length; const arc=360/tot;
+        premiosAtuais.forEach((p,i)=>{
+            const s=document.createElement('div'); s.className='segmento';
+            const r=i*arc; const sk=90-arc;
+            s.style.transform=`rotate(${r}deg) skewY(-${sk}deg)`; s.style.backgroundColor=p.cor;
+            const c=document.createElement('div'); c.className='seg-conteudo';
+            c.style.transform=`skewY(${sk}deg) rotate(${arc/2}deg)`; c.innerHTML=`<span>${p.nome}</span>`;
+            s.appendChild(c); w.appendChild(s);
+        });
+    }
+    function irResgate(){ if(!estado.premioFinal)return; estado.resgatado=true; estado.dataResgate=new Date().toISOString(); salvarEstadoUsuario(); montarTelaResgate(); mostrarTela('tela-resgate'); }
+    function montarTelaResgate(){ const p=estado.premioFinal; document.getElementById('resgate-nome').innerText=p.nome; document.getElementById('resgate-cupom').innerText=p.cupom; const d=new Date(estado.dataResgate); d.setDate(d.getDate()+7); document.getElementById('resgate-data').innerText=d.toLocaleDateString('pt-BR'); }
+    function atualizarUI(){ document.getElementById('contador-giros').innerText=`Jogada ${estado.giros+1} de ${estado.maxGiros}`; if(estado.giros>=estado.maxGiros)document.getElementById('contador-giros').innerText="Última Jogada!"; }
+    function mostrarTela(id){ document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa')); document.getElementById(id).classList.add('ativa'); }
+    function getKey(){ return `macellaio_user_${estado.campanha}`; }
+    function salvarEstadoUsuario(){ localStorage.setItem(getKey(), JSON.stringify(estado)); }
+    function carregarEstadoUsuario(){ const s=localStorage.getItem(getKey()); if(s)Object.assign(estado, JSON.parse(s)); }
+    function gerarLink(){ const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); if(!n)return alert("Digite nome"); const u=`${location.origin}${location.pathname}?c=${n}`; document.getElementById('resultado-link').style.display='block'; document.getElementById('resultado-link').innerHTML=`<a href="${u}" style="color:#fff">${u}</a>`; }
+    function copiarCodigo(){ navigator.clipboard.writeText(document.getElementById('resgate-cupom').innerText); alert("Copiado!"); }
+</script>
+</body>
+</html>
