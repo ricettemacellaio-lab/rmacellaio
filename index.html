@@ -1,3 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Macellaio Rewards - V26 Top Anchor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* --- ESTILOS GERAIS --- */
+        :root {
+            --gold: #FFC107; --gold-dark: #FFB300;
+            --bg-page: #0f0f0f; --bg-panel: #1E1E1E;
+            --text-main: #ffffff;
+            --danger: #d32f2f;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { height: 100%; margin: 0; font-family: 'Roboto', sans-serif; background: #000; color: var(--text-main); overflow: hidden; }
+        
+        #app-container {
+            width: 100%; height: 100%; max-width: 500px; margin: 0 auto;
+            position: relative; background: var(--bg-page); display: flex; flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.7);
+        }
+        #fundo-overlay {
+            position: absolute; width: 100%; height: 100%; top:0; left:0;
+            background: url('https://img.freepik.com/fotos-gratis/hamburguer-vista-frontal-em-tua-de-madeira-escura_23-2148234991.jpg') center/cover;
+            opacity: 0.2; pointer-events: none; z-index: 0;
+        }
+        main { flex: 1; position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+
+        /* HEADER */
+        .header-title { 
+            color: var(--gold); font-size: 1.8rem; font-weight: 900; 
+            text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; 
+            text-shadow: 0 4px 10px rgba(0,0,0,0.9); text-align: center;
+            cursor: pointer; user-select: none;
+        }
+        .status-pill { border: 1px solid var(--gold); color: var(--gold); padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; margin-bottom: 20px; background: rgba(0,0,0,0.8); }
+        
+        /* --- ROLETA --- */
+        #roleta-container { position: relative; width: 320px; height: 320px; margin-bottom: 60px; margin-top: 30px; }
+        
+        #roleta-wrapper {
+            width: 100%; height: 100%; border-radius: 50%; position: relative; overflow: hidden;
+            border: 8px solid #fff; box-shadow: 0 0 40px rgba(0,0,0,0.8);
+            transform: rotate(0deg);
+            z-index: 5;
+        }
+        
+        /* Ponteiro Amarelo (TOPO 12h - Apontando para o centro) */
+        #ponteiro { 
+            position: absolute; 
+            top: -25px; left: 50%; 
+            transform: translateX(-50%);
+            width: 0; height: 0; 
+            border-left: 25px solid transparent; 
+            border-right: 25px solid transparent; 
+            border-top: 50px solid var(--gold); 
+            z-index: 25; 
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5)); 
+        }
+
+        .segmento { position: absolute; top: 0; right: 0; width: 50%; height: 50%; transform-origin: 0% 100%; overflow: hidden; }
+        .seg-conteudo { position: absolute; left: -100%; width: 200%; height: 200%; text-align: center; padding-top: 40px; font-size: 0.75rem; font-weight: 700; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); display: flex; justify-content: center; }
+        .seg-conteudo span { display: block; width: 80px; line-height: 1.1; }
+        #centro-roleta { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background: #222; border: 4px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; }
+
+        /* --- VISUAIS DO DARDO --- */
+        #projectile-dart {
+            position: absolute; 
+            bottom: -150px; left: 50%; 
+            transform: translateX(-50%) rotate(180deg);
+            font-size: 50px; 
+            z-index: 30; 
+            display: none; 
+            pointer-events: none; 
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+        }
+        
+        /* Trajetória para o TOPO (12h) */
+        @keyframes dartTrajectory {
+            0% { bottom: -150px; transform: translateX(-50%) rotate(180deg) scale(1.2); opacity: 1; }
+            100% { bottom: 280px; transform: translateX(-50%) rotate(180deg) scale(0.9); opacity: 1; } 
+        }
+        .flying-dart-anim { animation: dartTrajectory 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
+
+        /* Dardo PRESO na roleta */
+        #dardo-preso {
+            position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: 20; display: none;
+        }
+        #dardo-preso::after {
+            content: '🎯'; font-size: 45px; 
+            position: absolute; top: -22px; left: -22px;
+            /* Aponta para o centro */
+            transform: rotate(180deg);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        /* BOTÕES */
+        .btn-gold { background: var(--gold); color: #000; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; border: none; padding: 18px 0; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(255, 193, 7, 0.4); width: 85%; max-width: 300px; transition: transform 0.1s; position: relative; z-index: 101; }
+        .btn-gold:active { transform: scale(0.96); }
+        .btn-throw { background: #E91E63; color: white; box-shadow: 0 0 20px rgba(233, 30, 99, 0.5); }
+        .btn-outline { background: transparent; border: 2px solid #555; color: #fff; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
+
+        /* TELAS */
+        .tela { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
+        .tela.ativa { display: flex; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .resgate-card { background: var(--bg-panel); padding: 30px 20px; border-radius: 15px; border: 1px solid #333; text-align: center; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
+        .cupom-box { background: #000; border: 2px dashed var(--gold); color: var(--gold); font-size: 2.2rem; padding: 15px; margin: 20px 0; font-weight: 900; letter-spacing: 2px; border-radius: 8px; }
+        .aviso-legal { font-size: 0.65rem; color: #666; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; width: 100%; }
+
+        /* ADMIN */
+        #tela-admin { justify-content: flex-start; padding-top: 20px; background: #0a0a0a; z-index: 200; overflow-y: auto; }
+        .admin-section { background: #1c1c1c; width: 95%; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333; }
+        .premio-row { display: flex; gap: 5px; margin-bottom: 10px; align-items: center; }
+        .input-admin { background: #fff; color: #333; border: 1px solid #ccc; padding: 8px; border-radius: 4px; width: 100%; }
+        .col-nome { flex: 2; } .col-cupom { flex: 1.5; } .col-peso { flex: 0.8; }
+        .btn-remove { background: var(--danger); color: white; border: none; width: 30px; height: 30px; border-radius: 4px; font-weight: bold; }
+        .btn-add, .btn-save { border: none; padding: 10px; width: 48%; border-radius: 20px; font-weight: bold; cursor: pointer; }
+        .btn-add { background: #e0e0e0; color: #333; } .btn-save { background: #900; color: #fff; }
+        .hidden { display: none !important; }
+        .link-result { margin-top:10px; padding:10px; background:#004d40; color:#fff; font-size:0.8rem; border-radius:5px; word-break:break-all; display:none; }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <div id="fundo-overlay"></div>
+
+    <div id="tela-jogo" class="tela">
+        <div class="header-title" onclick="verificarSegredo()">MACELLAIO REWARDS</div>
+        <div class="status-pill" id="contador-giros">Carregando...</div>
+
+        <div id="roleta-container">
+            <div id="ponteiro"></div>
+            
+            <div id="roleta-wrapper">
+                <div id="dardo-preso"></div>
+            </div>
+            <div id="centro-roleta"></div>
+            <div id="projectile-dart">🎯</div>
+        </div>
+
+        <button id="btn-girar" class="btn-gold" onclick="iniciarGiroMotor()">GIRAR ROLETA</button>
+        <button id="btn-arremessar" class="btn-gold btn-throw hidden" onclick="arremessarDardo()">ATIRAR DARDO!</button>
+
+        <div id="msg-resultado" class="hidden" style="margin-top:20px; text-align:center;">
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:5px;">Você acertou em:</p>
+            <h3 id="txt-premio-atual" style="color:var(--gold); font-size:1.5rem; margin:0 0 20px 0;">...</h3>
+            <button id="btn-resgatar-home" class="btn-gold" style="padding:12px 30px; font-size:0.9rem; width:auto;" onclick="irResgate()">RESGATAR</button>
+            <button id="btn-girar-dnv" class="btn-outline" style="margin-left:10px;" onclick="resetarJogo()">GIRAR DE NOVO</button>
+        </div>
+    </div>
+
+    <div id="tela-resgate" class="tela">
+        <div class="resgate-card">
+            <h2 style="color:var(--gold); margin:0;">🎉 PARABÉNS!</h2>
+            <p style="color:#aaa; font-size:0.9rem;">Seu prêmio foi garantido.</p>
+            <h3 id="resgate-nome" style="font-size:1.4rem; margin:15px 0 5px 0;">...</h3>
+            <div class="cupom-box" id="resgate-cupom">...</div>
+            <p style="font-size:0.8rem; color:#888; margin-bottom:20px;">Válido até: <span id="resgate-data"></span></p>
+            <button onclick="copiarCodigo()" class="btn-gold" style="width:100%; margin-bottom:10px;">COPIAR CÓDIGO</button>
+            <a href="https://www.rmacellaio.com.br" target="_blank" class="btn-gold" style="background:#333; color:#fff; width:100%; line-height:50px; padding:0;">RESGATAR AGORA</a>
+            <div class="aviso-legal">Atenção: Este prêmio é único e vinculado ao seu cadastro.</div>
+        </div>
+    </div>
+
+    <div id="tela-bloqueio" class="tela">
+        <h2 style="color:var(--danger);">LINK INVÁLIDO</h2>
+        <p style="color:#ccc; text-align:center;">Campanha finalizada.</p>
+    </div>
+
+    <div id="tela-admin" class="tela">
+        <div class="header-title" style="font-size:1.2rem; margin-top:20px;">ADMINISTRAÇÃO</div>
+        <div class="admin-section">
+            <h3>Prêmios & Pesos (Mestre)</h3>
+            <p style="font-size:0.7rem; color:#aaa;">O link gerado HERDA estes pesos.</p>
+            <div style="display:flex; gap:5px; font-size:0.7rem; color:#888; margin-bottom:5px;">
+                <span class="col-nome">NOME</span><span class="col-cupom">CUPOM</span><span class="col-peso">PESO</span>
+            </div>
+            <div id="lista-premios"></div>
+            <div style="margin-top:10px; display:flex; gap:10px;">
+                <button onclick="adicionarPremio()" class="btn-add">+ ITEM</button>
+                <button onclick="salvarPremiosAdmin()" class="btn-save">SALVAR PREMIOS</button>
+            </div>
+        </div>
+        <div class="admin-section">
+            <h3>Gerar Campanha</h3>
+            <input type="text" id="campanha-nome" class="input-admin" placeholder="Nome da Campanha (ex: PROMO10)">
+            <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK</button>
+            <div id="resultado-link" class="link-result"></div>
+        </div>
+        <br><br>
+    </div>
+</div>
+
 <script>
     /* ----------------------------------------------------------------
        1. ENGINE DE ÁUDIO
@@ -47,19 +245,8 @@
     ];
     const CORES = ["#e53935", "#43A047", "#1E88E5", "#FB8C00", "#8E24AA", "#00ACC1", "#FDD835", "#78909C"];
     let premiosAtuais, estado = { campanha: null, giros: 0, maxGiros: 3, resgatado: false, premioFinal: null, dataResgate: null };
-    
-    // Variáveis de Física
-    let rotationAngle = 0;
-    let velocity = 0;
-    let mode = 'IDLE'; // IDLE, MOTOR, FLYING, PENDULUM, FINISHED
-    let animFrame = null;
-    let targetPrizeIndex = -1;
-    let segredoClicks = 0;
-    
-    // Configurações de sincronia
-    const FRAMES_TO_IMPACT = 21; // Sincronizado com 0.35s do CSS (aprox 60fps)
-    let framesRestantes = 0;
-    let targetFinalAngle = 0;
+    let rotationAngle = 0, velocity = 0, mode = 'IDLE', animFrame = null, dartAttachedAngle = 0, targetPrizeIndex = -1, segredoClicks = 0;
+    let flyingFrames = 0;
 
     // INIT
     window.onload = function() {
@@ -94,203 +281,127 @@
     };
 
     /* ----------------------------------------------------------------
-       3. LÓGICA DO JOGO
+       3. LÓGICA DO JOGO (TOP ANCHOR: Hit 12h & Stop)
        ---------------------------------------------------------------- */
     function iniciarGiroMotor() {
         if(estado.giros >= estado.maxGiros) return;
         if(audioCtx.state === 'suspended') audioCtx.resume();
-        
-        document.getElementById('btn-girar').classList.add('hidden'); 
-        document.getElementById('btn-arremessar').classList.remove('hidden');
-        
-        mode = 'MOTOR'; 
-        velocity = 0; 
-        loopFisica(); 
-        startSpinSound();
+        document.getElementById('btn-girar').classList.add('hidden'); document.getElementById('btn-arremessar').classList.remove('hidden');
+        mode = 'MOTOR'; velocity = 0; loopFisica(); startSpinSound();
     }
 
     function arremessarDardo() {
         if (mode !== 'MOTOR') return;
         document.getElementById('btn-arremessar').classList.add('hidden');
         
-        // Dispara animação visual CSS
         const projectile = document.getElementById('projectile-dart'); 
-        projectile.style.display = 'block'; 
-        projectile.classList.remove('flying-dart-anim'); // reset
-        void projectile.offsetWidth; // trigger reflow
-        projectile.classList.add('flying-dart-anim');
+        projectile.style.display = 'block'; projectile.classList.add('flying-dart-anim');
         
-        // --- CÁLCULO DO VENCEDOR (Logica de Pesos) ---
+        // SORTEIO
         let totalPeso = premiosAtuais.reduce((s, p) => s + (parseInt(p.peso) || 0), 0);
         let r = Math.random() * totalPeso;
-        targetPrizeIndex = 0;
+        let cursor = 0; targetPrizeIndex = 0;
         
         if (totalPeso > 0) {
-            // Se tem pesos definidos, respeita a probabilidade
-            let cursor = 0;
             for(let i=0; i<premiosAtuais.length; i++) { 
                 cursor += (parseInt(premiosAtuais[i].peso) || 0); 
                 if(r < cursor) { targetPrizeIndex = i; break; } 
             }
         } else {
-            // Se peso for 0 em tudo, sorteio totalmente aleatório (física simulada)
-            // Aqui decidimos o vencedor aleatório e forçamos a roda a ir até ele
             targetPrizeIndex = Math.floor(Math.random() * premiosAtuais.length);
         }
 
-        // --- CÁLCULO DE TRAJETÓRIA PERFEITA ---
-        // Queremos que o prêmio 'targetPrizeIndex' esteja em 12h (Topo) daqui a exatos FRAMES_TO_IMPACT frames.
-        // O topo é 360 graus (ou 0).
+        // ALVO: 12h (Topo)
+        const segArc = 360 / premiosAtuais.length; 
+        const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
         
-        const totalSegmentos = premiosAtuais.length;
-        const arcoPorSeg = 360 / totalSegmentos;
+        // Rotação necessária para o prêmio estar no Topo (360/0deg)
+        let targetRotation = 360 - centerSegAngle;
         
-        // Onde está o centro do prêmio alvo (em graus, relativo ao início da roleta)?
-        const anguloCentroPremio = (targetPrizeIndex * arcoPorSeg) + (arcoPorSeg / 2);
+        const currentMod = rotationAngle % 360; 
+        let diff = targetRotation - currentMod; 
+        if (diff < 0) diff += 360; 
         
-        // Para o prêmio estar no TOPO (ponteiro amarelo), a rotação da roleta deve ser:
-        // Ex: Se o prêmio está em 90deg, precisamos girar 270deg (360-90) para ele chegar no topo.
-        const rotacaoAlvoRelativa = 360 - anguloCentroPremio;
+        // Ajuste de velocidade
+        const framesToImpact = 22; 
+        const distanceNeeded = diff + 360; 
+        velocity = distanceNeeded / framesToImpact; 
         
-        // Onde a roleta está agora?
-        const rotacaoAtual = rotationAngle;
-        const modAtual = rotacaoAtual % 360; // Pega o resto da divisão para saber a posição atual 0-360
-        
-        // Quanto falta girar para alinhar?
-        let diffParaAlvo = rotacaoAlvoRelativa - modAtual;
-        
-        // Normaliza para sempre girar para frente (sentido horário)
-        if (diffParaAlvo < 0) diffParaAlvo += 360;
-        
-        // Adiciona voltas extras para dar velocidade (Ex: 2 voltas completas + o alinhamento)
-        // Isso garante que a roleta gire rápido enquanto o dardo voa
-        const voltasExtras = 360 * 2; 
-        const distanciaTotal = diffParaAlvo + voltasExtras;
-        
-        // Define a velocidade exata por frame para chegar lá no tempo certo
-        velocity = distanciaTotal / FRAMES_TO_IMPACT;
-        
-        // Salva onde queremos chegar exatamente
-        targetFinalAngle = rotationAtual + distanciaTotal;
-        
-        framesRestantes = FRAMES_TO_IMPACT;
+        flyingFrames = 22;
         mode = 'FLYING';
     }
 
     function impactoDardo() {
-        mode = 'PENDULUM'; 
-        stopSpinSound(); 
-        playThud();
-        
+        mode = 'PENDULUM'; stopSpinSound(); playThud();
         document.getElementById('projectile-dart').style.display = 'none';
         
         const dardoPreso = document.getElementById('dardo-preso'); 
         dardoPreso.style.display = 'block';
         
-        // FORÇA A POSIÇÃO FINAL EXATA (Corrige milésimos de erro de float)
-        rotationAngle = targetFinalAngle;
-        
-        // O dardo bateu no TOPO (12h). Como alinhamos a roleta para o prêmio estar no topo,
-        // o dardo agora está visualmente "preso" no prêmio.
-        // Giramos o dardoPreso para 0 (topo relativo ao container do dardo)
-        // Mas o dardo gira junto com a roleta, então precisamos calcular a rotação inversa no CSS
-        // Na verdade, o elemento #dardo-preso está DENTRO do roleta-wrapper.
-        // Se a roleta está em 'targetFinalAngle', e o dardo bateu no topo físico (12h),
-        // A posição do dardo relativa à roleta é o inverso da rotação atual.
-        
-        const anguloImpactoRelativoRoleta = 360 - (targetFinalAngle % 360);
-        
-        // Posiciona o dardo dentro da roleta
-        dardoPreso.style.transform = `rotate(${anguloImpactoRelativoRoleta}deg) translate(0, 145px)`;
-        
-        // Reduz a velocidade drasticamente para o efeito de impacto
-        velocity = 0; 
+        // Impacto no Topo
+        dartAttachedAngle = 360 - rotationAngle;
+        dardoPreso.style.transform = `rotate(${dartAttachedAngle}deg) translate(0, 145px)`;
     }
 
     function loopFisica() {
-        if (mode === 'IDLE' || mode === 'FINISHED') return;
+        if (mode === 'IDLE') return;
 
         if (mode === 'MOTOR') {
-            // Acelera até uma velocidade constante
             if (velocity < 25) velocity += 0.8;
             rotationAngle += velocity;
         }
         else if (mode === 'FLYING') {
-            // Move exatamente a velocidade calculada para a sincronia
             rotationAngle += velocity;
-            framesRestantes--;
-            
-            if (framesRestantes <= 0) {
-                impactoDardo();
-            }
+            flyingFrames--;
+            if (flyingFrames <= 0) impactoDardo();
         }
         else if (mode === 'PENDULUM') {
-            // LÓGICA DE PÊNDULO LENTO E PESADO
-            // O objetivo é estabilizar em 'targetFinalAngle'
-            // O peso do dardo (que está no topo/alvo) puxa para baixo? 
-            // Não, o usuário quer que o dardo indique o prêmio na SETA AMARELA (Topo).
-            // Então o pêndulo deve oscilar em torno do ponto de impacto (Topo).
+            // ESTABILIZAR NO TOPO (360)
+            // O dardo funciona como âncora
+            const currentDartPos = (rotationAngle + dartAttachedAngle) % 360;
+            let diff = 360 - currentDartPos; 
             
-            const target = targetFinalAngle;
-            let diff = target - rotationAngle;
+            if (diff > 180) diff -= 360; 
+            if (diff < -180) diff += 360;
             
-            // Mola suave (low stiffness) e amortecimento alto (high damping)
-            const forcaMola = diff * 0.05; // Força "mole"
-            velocity = (velocity + forcaMola) * 0.95; // Amortecimento (fricção)
+            // Força de mola para estabilizar no impacto
+            const springForce = 0.3 * diff;
+            // Amortecimento forte
+            const damping = 0.85; 
             
+            velocity = (velocity + springForce) * damping;
             rotationAngle += velocity;
             
-            // Condição de parada: velocidade muito baixa e muito perto do alvo
-            if (Math.abs(velocity) < 0.05 && Math.abs(diff) < 0.1) {
+            // Parada
+            if (Math.abs(velocity) < 0.1 && Math.abs(diff) < 0.5) {
                 mode = 'FINISHED'; 
-                rotationAngle = target; // crava a posição final
+                rotationAngle = 360 - dartAttachedAngle; 
                 finalizarJogo();
             }
         }
-        
         document.getElementById('roleta-wrapper').style.transform = `rotate(${rotationAngle}deg)`;
         animFrame = requestAnimationFrame(loopFisica);
     }
 
     function finalizarJogo() {
-        cancelAnimationFrame(animFrame); 
-        playWin();
-        
-        // Como forçamos a matemática, o prêmio é garantido ser o targetPrizeIndex
+        cancelAnimationFrame(animFrame); playWin();
         const premio = premiosAtuais[targetPrizeIndex]; 
         
         setTimeout(() => {
             estado.giros++;
-            if (!premio.cupom || premio.cupom.trim() === "") { 
-                document.getElementById('txt-premio-atual').innerText = "Não foi dessa vez!"; 
-                estado.premioFinal = null; 
-            } else { 
-                estado.premioFinal = premio; 
-                document.getElementById('txt-premio-atual').innerText = premio.nome; 
-            }
-            salvarEstadoUsuario(); 
-            atualizarUI(); 
-            document.getElementById('msg-resultado').classList.remove('hidden');
-            
-            if (estado.giros >= estado.maxGiros) { 
-                document.getElementById('btn-girar-dnv').classList.add('hidden'); 
-                if (!estado.premioFinal) document.getElementById('btn-resgatar-home').classList.add('hidden'); 
-            }
-        }, 500);
+            if (!premio.cupom || premio.cupom.trim() === "") { document.getElementById('txt-premio-atual').innerText = "Não foi dessa vez!"; estado.premioFinal = null; } else { estado.premioFinal = premio; document.getElementById('txt-premio-atual').innerText = premio.nome; }
+            salvarEstadoUsuario(); atualizarUI(); document.getElementById('msg-resultado').classList.remove('hidden');
+            if (estado.giros >= estado.maxGiros) { document.getElementById('btn-girar-dnv').classList.add('hidden'); if (!estado.premioFinal) document.getElementById('btn-resgatar-home').classList.add('hidden'); }
+        }, 800);
     }
     
     function resetarJogo() {
         if(estado.giros >= estado.maxGiros) return;
-        document.getElementById('msg-resultado').classList.add('hidden'); 
-        document.getElementById('btn-girar').classList.remove('hidden');
-        document.getElementById('dardo-preso').style.display = 'none'; 
-        document.getElementById('projectile-dart').classList.remove('flying-dart-anim');
-        
-        // Reset básico para não acumular rotação infinita visualmente (opcional, mas bom pra precisão)
-        // Mantemos o rotationAngle acumulado para não pular a animação
+        document.getElementById('msg-resultado').classList.add('hidden'); document.getElementById('btn-girar').classList.remove('hidden');
+        document.getElementById('dardo-preso').style.display = 'none'; document.getElementById('projectile-dart').classList.remove('flying-dart-anim');
     }
 
-    /* --- ADMIN & LINK (Funções Auxiliares inalteradas na lógica, apenas minificadas onde possível) --- */
+    /* --- ADMIN & LINK --- */
     function verificarSegredo() { segredoClicks++; if(segredoClicks >= 5) { alert("Acesso Admin!"); abrirAdmin(); }}
     function abrirAdmin() { document.getElementById('tela-admin').classList.add('ativa'); document.getElementById('tela-jogo').classList.remove('ativa'); document.getElementById('tela-bloqueio').classList.remove('ativa'); renderAdminPremios(); }
     function renderAdminPremios() { 
@@ -316,3 +427,5 @@
     function carregarEstadoUsuario(){ const s=localStorage.getItem(getKey()); if(s)Object.assign(estado, JSON.parse(s)); }
     function copiarCodigo(){ navigator.clipboard.writeText(document.getElementById('resgate-cupom').innerText); alert("Copiado!"); }
 </script>
+</body>
+</html>
