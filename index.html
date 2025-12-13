@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Macellaio Rewards - V16</title>
+    <title>Macellaio Rewards - V18 Hybrid</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         /* --- ESTILOS GERAIS --- */
@@ -33,8 +33,7 @@
             color: var(--gold); font-size: 1.8rem; font-weight: 900; 
             text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; 
             text-shadow: 0 4px 10px rgba(0,0,0,0.9); text-align: center;
-            cursor: pointer; /* Indicativo de clique para o segredo */
-            user-select: none;
+            cursor: pointer; user-select: none;
         }
         .status-pill { border: 1px solid var(--gold); color: var(--gold); padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; margin-bottom: 20px; background: rgba(0,0,0,0.8); }
         
@@ -60,22 +59,26 @@
         .seg-conteudo span { display: block; width: 80px; line-height: 1.1; }
         #centro-roleta { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background: #222; border: 4px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; }
 
-        /* --- VISUAIS --- */
+        /* --- VISUAIS DO DARDO --- */
         #projectile-dart {
             position: absolute; bottom: -100px; left: 50%; transform: translateX(-50%) rotate(180deg);
             font-size: 50px; z-index: 100; display: none; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
         @keyframes dartTrajectory {
             0% { bottom: -150px; transform: translateX(-50%) rotate(180deg) scale(1.2); opacity: 1; }
-            100% { bottom: 40px; transform: translateX(-50%) rotate(180deg) scale(0.8); opacity: 1; }
+            100% { bottom: 35px; transform: translateX(-50%) rotate(180deg) scale(0.8); opacity: 1; } 
         }
         .flying-dart-anim { animation: dartTrajectory 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
 
         #dardo-preso {
-            position: absolute; width: 20px; height: 20px; z-index: 15; display: none;
+            position: absolute; width: 0; height: 0; 
+            z-index: 15; display: none;
         }
         #dardo-preso::after {
-            content: '🗡️'; font-size: 50px; position: absolute; top: -25px; left: -18px; transform: rotate(180deg); filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.6));
+            content: '🎯'; font-size: 40px; 
+            position: absolute; top: -35px; left: -20px;
+            transform: rotate(180deg);
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));
         }
 
         /* BOTÕES */
@@ -121,7 +124,7 @@
             </div>
             <div id="ponteiro"></div>
             <div id="centro-roleta"></div>
-            <div id="projectile-dart">🗡️</div>
+            <div id="projectile-dart">🎯</div>
         </div>
 
         <button id="btn-girar" class="btn-gold" onclick="iniciarGiroMotor()">GIRAR ROLETA</button>
@@ -155,19 +158,15 @@
 
     <div id="tela-admin" class="tela">
         <div class="header-title" style="font-size:1.2rem; margin-top:20px;">ADMINISTRAÇÃO</div>
-        
         <div class="admin-section">
             <h3>Criar Campanha</h3>
             <input type="text" id="campanha-nome" class="input-admin" placeholder="Nome">
             <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK</button>
             <div id="resultado-link" class="link-result"></div>
         </div>
-        
         <div class="admin-section">
-            <h3>Prêmios (Probabilidade)</h3>
-            <div style="display:flex; gap:5px; font-size:0.7rem; color:#888;">
-                <span class="col-nome">NOME</span><span class="col-cupom">CUPOM</span><span class="col-peso">PESO</span>
-            </div>
+            <h3>Prêmios & Pesos</h3>
+            <p style="font-size:0.7rem; color:#aaa; margin-bottom:10px;">Dica: Coloque <strong>0</strong> em todos os pesos para ativar o <strong>Modo Habilidade</strong> (onde bater, ganhou). Se colocar pesos, será sorteio guiado.</p>
             <div id="lista-premios"></div>
             <div style="margin-top:10px; display:flex; gap:10px;">
                 <button onclick="adicionarPremio()" class="btn-add">+ ITEM</button>
@@ -183,52 +182,37 @@
        1. ENGINE DE ÁUDIO
        ---------------------------------------------------------------- */
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let spinOscillator = null;
-    let spinGain = null;
+    let spinOscillator = null, spinGain = null;
 
     function startSpinSound() {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         if (spinOscillator) return; 
-        spinOscillator = audioCtx.createOscillator();
-        spinGain = audioCtx.createGain();
-        spinOscillator.connect(spinGain);
-        spinGain.connect(audioCtx.destination);
-        spinOscillator.type = 'sawtooth';
-        spinOscillator.frequency.setValueAtTime(50, audioCtx.currentTime);
-        spinGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-        spinOscillator.start();
+        spinOscillator = audioCtx.createOscillator(); spinGain = audioCtx.createGain();
+        spinOscillator.connect(spinGain); spinGain.connect(audioCtx.destination);
+        spinOscillator.type = 'sawtooth'; spinOscillator.frequency.setValueAtTime(50, audioCtx.currentTime);
+        spinGain.gain.setValueAtTime(0.08, audioCtx.currentTime); spinOscillator.start();
     }
-
     function stopSpinSound() {
         if (spinOscillator) {
             spinGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
-            spinOscillator.stop(audioCtx.currentTime + 0.05);
-            spinOscillator = null; spinGain = null;
+            spinOscillator.stop(audioCtx.currentTime + 0.05); spinOscillator = null; spinGain = null;
         }
     }
-    
     function playThud() {
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
         osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.15);
-        gain.gain.setValueAtTime(1.0, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-        osc.type = 'square';
-        osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(120, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(1.0, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.type = 'square'; osc.start(); osc.stop(audioCtx.currentTime + 0.15);
     }
-    
     function playWin() {
         const now = audioCtx.currentTime;
         [523, 659, 784, 1046].forEach((f,i) => {
             const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
             o.connect(g); g.connect(audioCtx.destination); o.frequency.value = f;
-            g.gain.setValueAtTime(0, now+i*0.1);
-            g.gain.linearRampToValueAtTime(0.2, now+i*0.1+0.1);
-            g.gain.exponentialRampToValueAtTime(0.001, now+i*0.1+1.5);
-            o.start(now+i*0.1); o.stop(now+i*0.1+1.5);
+            g.gain.setValueAtTime(0, now+i*0.1); g.gain.linearRampToValueAtTime(0.2, now+i*0.1+0.1);
+            g.gain.exponentialRampToValueAtTime(0.001, now+i*0.1+1.5); o.start(now+i*0.1); o.stop(now+i*0.1+1.5);
         });
     }
 
@@ -236,230 +220,158 @@
        2. DADOS E INICIALIZAÇÃO
        ---------------------------------------------------------------- */
     const DEFAULT_PREMIOS = [
-        { nome: "10% OFF", cupom: "DESC10", cor: "#e53935", peso: 10 },
-        { nome: "Frete Grátis", cupom: "FREE", cor: "#43A047", peso: 5 },
-        { nome: "BOGO", cupom: "BOGO", cor: "#8E24AA", peso: 2 },
-        { nome: "Sobremesa", cupom: "DOCE", cor: "#FB8C00", peso: 10 },
-        { nome: "5% OFF", cupom: "DESC05", cor: "#FDD835", peso: 20 },
-        { nome: "Tente de Novo", cupom: "", cor: "#78909C", peso: 50 } 
+        { nome: "10% OFF", cupom: "DESC10", cor: "#e53935", peso: 10 }, { nome: "Frete Grátis", cupom: "FREE", cor: "#43A047", peso: 5 },
+        { nome: "BOGO", cupom: "BOGO", cor: "#8E24AA", peso: 2 }, { nome: "Sobremesa", cupom: "DOCE", cor: "#FB8C00", peso: 10 },
+        { nome: "5% OFF", cupom: "DESC05", cor: "#FDD835", peso: 20 }, { nome: "Tente de Novo", cupom: "", cor: "#78909C", peso: 50 } 
     ];
     const CORES = ["#e53935", "#43A047", "#1E88E5", "#FB8C00", "#8E24AA", "#00ACC1", "#FDD835", "#78909C"];
+    let premiosAtuais, estado = { campanha: null, giros: 0, maxGiros: 3, resgatado: false, premioFinal: null, dataResgate: null };
+    let rotationAngle = 0, velocity = 0, mode = 'IDLE', animFrame = null, dartAttachedAngle = 0, targetPrizeIndex = -1, segredoClicks = 0;
 
-    let premiosAtuais;
-    let estado = { campanha: null, giros: 0, maxGiros: 3, resgatado: false, premioFinal: null, dataResgate: null };
-    let rotationAngle = 0, velocity = 0, mode = 'IDLE', animFrame = null, dartAttachedAngle = 0, targetPrizeIndex = -1;
-    let segredoClicks = 0;
-
-    // --- CARREGAMENTO SEGURO ---
-    try {
-        const stored = localStorage.getItem('macellaio_premios_v16');
-        premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS;
-    } catch (e) {
-        console.warn("Resetando dados corrompidos");
-        premiosAtuais = DEFAULT_PREMIOS;
-    }
+    try { const stored = localStorage.getItem('macellaio_premios_v18'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
 
     window.onload = function() {
         const params = new URLSearchParams(window.location.search);
-        
-        // 1. CHECAGEM DE ADMIN (Prioridade Alta)
-        const adminParam = params.get('admin');
-        if (adminParam === '1' || adminParam === 'true') {
-            abrirAdmin();
-            return;
-        }
-
-        // 2. CHECAGEM DE USUÁRIO
-        const campanha = params.get('c');
-        if (!campanha) {
-            mostrarTela('tela-bloqueio'); return;
-        }
-        estado.campanha = campanha;
-        carregarEstadoUsuario();
-
-        // 3. ROTEAMENTO DE ESTADO DO JOGO
-        if (estado.resgatado) {
-            montarTelaResgate();
-            mostrarTela('tela-resgate');
-        } 
-        else if (estado.giros >= estado.maxGiros && estado.premioFinal) {
-            estado.resgatado = true;
-            if(!estado.dataResgate) estado.dataResgate = new Date().toISOString();
-            salvarEstadoUsuario();
-            montarTelaResgate();
-            mostrarTela('tela-resgate');
-        } else {
-            renderizarRoleta();
-            atualizarUI();
-            mostrarTela('tela-jogo');
-        }
+        if (params.get('admin') === '1' || params.get('admin') === 'true') { abrirAdmin(); return; }
+        const campanha = params.get('c'); if (!campanha) { mostrarTela('tela-bloqueio'); return; }
+        estado.campanha = campanha; carregarEstadoUsuario();
+        if (estado.resgatado || (estado.giros >= estado.maxGiros && estado.premioFinal)) {
+            if(!estado.resgatado) { estado.resgatado = true; if(!estado.dataResgate) estado.dataResgate = new Date().toISOString(); salvarEstadoUsuario(); }
+            montarTelaResgate(); mostrarTela('tela-resgate');
+        } else { renderizarRoleta(); atualizarUI(); mostrarTela('tela-jogo'); }
     };
 
     /* ----------------------------------------------------------------
-       3. LÓGICA DO JOGO (FÍSICA)
+       3. LÓGICA DO JOGO (HÍBRIDA: SKILL vs PROBABILIDADE)
        ---------------------------------------------------------------- */
     function iniciarGiroMotor() {
         if(estado.giros >= estado.maxGiros) return;
         if(audioCtx.state === 'suspended') audioCtx.resume();
-        document.getElementById('btn-girar').classList.add('hidden');
-        document.getElementById('btn-arremessar').classList.remove('hidden');
+        document.getElementById('btn-girar').classList.add('hidden'); document.getElementById('btn-arremessar').classList.remove('hidden');
         mode = 'MOTOR'; velocity = 0; loopFisica(); startSpinSound();
     }
 
     function arremessarDardo() {
         if (mode !== 'MOTOR') return;
         document.getElementById('btn-arremessar').classList.add('hidden');
+        const projectile = document.getElementById('projectile-dart'); 
+        projectile.style.display = 'block'; projectile.classList.add('flying-dart-anim');
         
-        // Visual
-        const projectile = document.getElementById('projectile-dart');
-        projectile.style.display = 'block';
-        projectile.classList.add('flying-dart-anim');
-        
-        // Sorteio Seguro
+        // --- CHECAGEM DE MODO: PESOS ---
+        // Se soma dos pesos > 0: Modo Probabilidade (Guiado)
+        // Se soma dos pesos == 0: Modo Habilidade (Física Pura)
         let totalPeso = premiosAtuais.reduce((s, p) => s + (parseInt(p.peso)||0), 0);
-        let r = Math.random() * totalPeso;
-        let cursor = 0;
-        targetPrizeIndex = 0;
-        for(let i=0; i<premiosAtuais.length; i++) {
-            cursor += (parseInt(premiosAtuais[i].peso)||0);
-            if(r < cursor) { targetPrizeIndex = i; break; }
-        }
+        
+        if (totalPeso > 0) {
+            // MODO PROBABILIDADE (Magnético)
+            let r = Math.random() * totalPeso; 
+            let cursor = 0; targetPrizeIndex = 0;
+            for(let i=0; i<premiosAtuais.length; i++) { 
+                cursor += (parseInt(premiosAtuais[i].peso)||0); 
+                if(r < cursor) { targetPrizeIndex = i; break; } 
+            }
 
-        // Ajuste Magnético
-        const segArc = 360 / premiosAtuais.length;
-        const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
-        let targetRotation = 180 - centerSegAngle; 
-        const currentMod = rotationAngle % 360;
-        let diff = targetRotation - currentMod;
-        if (diff < 0) diff += 360; 
-        const framesToImpact = 22; // ~350ms
-        const distanceNeeded = diff + 360; 
-        velocity = distanceNeeded / framesToImpact;
+            // Calcular ajuste de velocidade para alinhar
+            const segArc = 360 / premiosAtuais.length; 
+            const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
+            let targetRotation = 180 - centerSegAngle; // 180 é o fundo visual
+            const currentMod = rotationAngle % 360; 
+            let diff = targetRotation - currentMod; 
+            if (diff < 0) diff += 360; 
+            
+            // Ajusta velocidade para chegar no alvo em 22 frames (350ms)
+            // (diff + 360) garante uma volta para manter a velocidade alta
+            velocity = (diff + 360) / 22; 
+        } else {
+            // MODO HABILIDADE (Sem intervenção)
+            // Não alteramos a velocity. Onde bater, bateu.
+            // targetPrizeIndex será ignorado/recalculado no final.
+        }
 
         setTimeout(impactoDardo, 350); 
     }
 
     function impactoDardo() {
-        mode = 'PENDULUM';
-        stopSpinSound();
-        playThud();
+        mode = 'PENDULUM'; stopSpinSound(); playThud();
         document.getElementById('projectile-dart').style.display = 'none';
-        const dardoPreso = document.getElementById('dardo-preso');
-        dardoPreso.style.display = 'block';
+        const dardoPreso = document.getElementById('dardo-preso'); dardoPreso.style.display = 'block';
         dartAttachedAngle = 180 - rotationAngle;
         dardoPreso.style.transform = `rotate(${dartAttachedAngle}deg) translate(0, 140px)`;
     }
 
     function loopFisica() {
         if (mode === 'IDLE') return;
-        if (mode === 'MOTOR') {
-            if (velocity < 22) velocity += 0.6;
-            rotationAngle += velocity;
-        }
+        if (mode === 'MOTOR') { if (velocity < 22) velocity += 0.6; rotationAngle += velocity; }
         else if (mode === 'PENDULUM') {
             const currentDartVisualPos = (rotationAngle + dartAttachedAngle) % 360;
-            let diff = 180 - currentDartVisualPos;
-            if (diff > 180) diff -= 360;
-            if (diff < -180) diff += 360;
+            let diff = 180 - currentDartVisualPos; 
+            if (diff > 180) diff -= 360; if (diff < -180) diff += 360;
             
-            const gravityForce = 0.5 * Math.sin(diff * (Math.PI / 180));
-            const friction = 0.993; 
-            velocity += gravityForce;
-            velocity *= friction;
-            rotationAngle += velocity;
+            const gravityForce = 0.65 * Math.sin(diff * (Math.PI / 180)); 
+            const friction = 0.992; 
             
-            if (Math.abs(velocity) < 0.03 && Math.abs(diff) < 1) {
-                mode = 'FINISHED';
-                rotationAngle = 180 - dartAttachedAngle; 
-                finalizarJogo();
+            velocity += gravityForce; velocity *= friction; rotationAngle += velocity;
+            
+            if (Math.abs(velocity) < 0.01 && Math.abs(diff) < 0.5) {
+                mode = 'FINISHED'; rotationAngle = 180 - dartAttachedAngle; finalizarJogo();
             }
         }
-        const wrapper = document.getElementById('roleta-wrapper');
-        wrapper.style.transform = `rotate(${rotationAngle}deg)`;
+        document.getElementById('roleta-wrapper').style.transform = `rotate(${rotationAngle}deg)`;
         animFrame = requestAnimationFrame(loopFisica);
     }
 
     function finalizarJogo() {
-        cancelAnimationFrame(animFrame);
-        playWin();
-        const premio = premiosAtuais[targetPrizeIndex];
+        cancelAnimationFrame(animFrame); playWin();
+        
+        // CALCULAR O VENCEDOR REAL (Baseado na posição final)
+        // Isso serve tanto para o modo habilidade quanto confirma o modo probabilidade
+        const segArc = 360 / premiosAtuais.length;
+        let normalizedAttached = dartAttachedAngle % 360;
+        if(normalizedAttached < 0) normalizedAttached += 360;
+        // Mapeamento: O segmento no índice 0 está em [0..arc].
+        // Mas a rotação é horária. Se attachedAngle é 10, é o segmento 0.
+        // Se attached é 350, é o último segmento.
+        let winningIndex = Math.floor(normalizedAttached / segArc);
+        // Ajuste de índice reverso (se necessário, depende da ordem de desenho)
+        // No render, i=0 é 0deg. i=1 é +arc.
+        // Se dardo grudou em 10deg, ele está no segmento 0.
+        // A lógica Math.floor(angle/arc) está correta para a ordem padrão.
+        
+        // Porém, como a roleta gira visualmente, às vezes inverte a ordem mental.
+        // Vamos garantir: Segmento 0 começa em 0. Segmento 1 em 60...
+        // Se dartAttached é 30 (seg 0).
+        const premio = premiosAtuais[winningIndex];
+        
         setTimeout(() => {
             estado.giros++;
-            if (!premio.cupom || premio.cupom.trim() === "") {
-                document.getElementById('txt-premio-atual').innerText = "Não foi dessa vez!";
-                estado.premioFinal = null;
-            } else {
-                estado.premioFinal = premio;
-                document.getElementById('txt-premio-atual').innerText = premio.nome;
-                if (estado.giros >= estado.maxGiros) {
-                   if(!estado.resgatado) { estado.resgatado=true; estado.dataResgate=new Date().toISOString(); salvarEstadoUsuario(); }
-                }
-            }
-            salvarEstadoUsuario();
-            atualizarUI();
-            document.getElementById('msg-resultado').classList.remove('hidden');
-            if (estado.giros >= estado.maxGiros) {
-                document.getElementById('btn-girar-dnv').classList.add('hidden');
-                if (!estado.premioFinal) document.getElementById('btn-resgatar-home').classList.add('hidden');
-            }
+            if (!premio.cupom || premio.cupom.trim() === "") { document.getElementById('txt-premio-atual').innerText = "Não foi dessa vez!"; estado.premioFinal = null; } else { estado.premioFinal = premio; document.getElementById('txt-premio-atual').innerText = premio.nome; }
+            salvarEstadoUsuario(); atualizarUI(); document.getElementById('msg-resultado').classList.remove('hidden');
+            if (estado.giros >= estado.maxGiros) { document.getElementById('btn-girar-dnv').classList.add('hidden'); if (!estado.premioFinal) document.getElementById('btn-resgatar-home').classList.add('hidden'); }
         }, 800);
     }
     
     function resetarJogo() {
         if(estado.giros >= estado.maxGiros) return;
-        document.getElementById('msg-resultado').classList.add('hidden');
-        document.getElementById('btn-girar').classList.remove('hidden');
-        document.getElementById('dardo-preso').style.display = 'none';
-        document.getElementById('projectile-dart').classList.remove('flying-dart-anim');
+        document.getElementById('msg-resultado').classList.add('hidden'); document.getElementById('btn-girar').classList.remove('hidden');
+        document.getElementById('dardo-preso').style.display = 'none'; document.getElementById('projectile-dart').classList.remove('flying-dart-anim');
     }
 
     /* --- ADMIN & UTILS --- */
-    function verificarSegredo() {
-        segredoClicks++;
-        if(segredoClicks >= 5) {
-            alert("Acesso Administrativo Liberado!");
-            abrirAdmin();
-        }
+    function verificarSegredo() { segredoClicks++; if(segredoClicks >= 5) { alert("Acesso Admin!"); abrirAdmin(); }}
+    function abrirAdmin() { document.getElementById('tela-admin').classList.add('ativa'); document.getElementById('tela-jogo').classList.remove('ativa'); document.getElementById('tela-bloqueio').classList.remove('ativa'); renderAdminPremios(); }
+    function renderAdminPremios() { 
+        const l = document.getElementById('lista-premios'); l.innerHTML=''; 
+        premiosAtuais.forEach((p,i)=>{ 
+            const d=document.createElement('div'); d.className='premio-row'; 
+            d.innerHTML=`<input type="text" class="input-admin col-nome" value="${p.nome}" id="n-${i}"><input type="text" class="input-admin col-cupom" value="${p.cupom}" id="c-${i}"><input type="number" class="input-admin col-peso" value="${p.peso}" id="p-${i}"><button class="btn-remove" onclick="rmP(${i})">X</button>`; 
+            l.appendChild(d); 
+        }); 
     }
-
-    function abrirAdmin() {
-        document.getElementById('tela-admin').classList.add('ativa');
-        document.getElementById('tela-jogo').classList.remove('ativa');
-        document.getElementById('tela-bloqueio').classList.remove('ativa');
-        renderAdminPremios();
-    }
-
-    function renderAdminPremios() {
-        const l = document.getElementById('lista-premios'); l.innerHTML='';
-        premiosAtuais.forEach((p,i)=>{
-            const d=document.createElement('div'); d.className='premio-row';
-            d.innerHTML=`<input type="text" class="input-admin col-nome" value="${p.nome}" id="n-${i}"><input type="text" class="input-admin col-cupom" value="${p.cupom}" id="c-${i}"><input type="number" class="input-admin col-peso" value="${p.peso||10}" id="p-${i}"><button class="btn-remove" onclick="rmP(${i})">X</button>`;
-            l.appendChild(d);
-        });
-    }
-    function adicionarPremio(){ saveM(); premiosAtuais.push({nome:"",cupom:"",peso:10,cor:CORES[premiosAtuais.length%CORES.length]}); renderAdminPremios(); }
+    function adicionarPremio(){ saveM(); premiosAtuais.push({nome:"",cupom:"",peso:0,cor:CORES[premiosAtuais.length%CORES.length]}); renderAdminPremios(); }
     function rmP(i){ if(premiosAtuais.length<=2)return; if(confirm("Remover?")){ saveM(); premiosAtuais.splice(i,1); renderAdminPremios(); } }
-    function saveM(){ premiosAtuais.forEach((p,i)=>{ 
-        const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value;
-        const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value;
-        const w=document.getElementById(`p-${i}`); if(w) p.peso=parseInt(w.value)||0;
-    }); }
-    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_premios_v16',JSON.stringify(premiosAtuais)); alert("Salvo!"); location.reload(); }
-    
-    function renderizarRoleta(){
-        const w=document.getElementById('roleta-wrapper'); 
-        const dardo = document.getElementById('dardo-preso');
-        w.innerHTML=''; w.appendChild(dardo);
-        const tot=premiosAtuais.length; const arc=360/tot;
-        premiosAtuais.forEach((p,i)=>{
-            const s=document.createElement('div'); s.className='segmento';
-            const r=i*arc; const sk=90-arc;
-            s.style.transform=`rotate(${r}deg) skewY(-${sk}deg)`; s.style.backgroundColor=p.cor;
-            const c=document.createElement('div'); c.className='seg-conteudo';
-            c.style.transform=`skewY(${sk}deg) rotate(${arc/2}deg)`; c.innerHTML=`<span>${p.nome}</span>`;
-            s.appendChild(c); w.appendChild(s);
-        });
-    }
+    function saveM(){ premiosAtuais.forEach((p,i)=>{ const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value; const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value; const w=document.getElementById(`p-${i}`); if(w) p.peso=parseInt(w.value)||0; }); }
+    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_premios_v18',JSON.stringify(premiosAtuais)); alert("Salvo!"); location.reload(); }
+    function renderizarRoleta(){ const w=document.getElementById('roleta-wrapper'); const dardo = document.getElementById('dardo-preso'); w.innerHTML=''; w.appendChild(dardo); const tot=premiosAtuais.length; const arc=360/tot; premiosAtuais.forEach((p,i)=>{ const s=document.createElement('div'); s.className='segmento'; const r=i*arc; const sk=90-arc; s.style.transform=`rotate(${r}deg) skewY(-${sk}deg)`; s.style.backgroundColor=p.cor; const c=document.createElement('div'); c.className='seg-conteudo'; c.style.transform=`skewY(${sk}deg) rotate(${arc/2}deg)`; c.innerHTML=`<span>${p.nome}</span>`; s.appendChild(c); w.appendChild(s); }); }
     function irResgate(){ if(!estado.premioFinal)return; estado.resgatado=true; estado.dataResgate=new Date().toISOString(); salvarEstadoUsuario(); montarTelaResgate(); mostrarTela('tela-resgate'); }
     function montarTelaResgate(){ const p=estado.premioFinal; document.getElementById('resgate-nome').innerText=p.nome; document.getElementById('resgate-cupom').innerText=p.cupom; const d=new Date(estado.dataResgate); d.setDate(d.getDate()+7); document.getElementById('resgate-data').innerText=d.toLocaleDateString('pt-BR'); }
     function atualizarUI(){ document.getElementById('contador-giros').innerText=`Jogada ${estado.giros+1} de ${estado.maxGiros}`; if(estado.giros>=estado.maxGiros)document.getElementById('contador-giros').innerText="Última Jogada!"; }
