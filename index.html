@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Macellaio Rewards - V29 Dart Fix</title>
+    <title>Macellaio Rewards - V30 Link Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         /* --- ESTILOS GERAIS --- */
@@ -53,7 +53,7 @@
             top: -25px; left: 50%; 
             transform: translateX(-50%);
             width: 0; height: 0; 
-            border-left: 25px solid transparent; border-right: 25px solid transparent; border-top: 50px solid var(transparent); 
+            border-left: 25px solid transparent; border-right: 25px solid transparent; border-top: 50px solid var(--gold); 
             z-index: 25; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5)); 
         }
 
@@ -66,39 +66,33 @@
             position: absolute; top: 50%; left: 50%;
             width: 60px; height: 60px;
             border-radius: 50%; transform: translate(-50%, -50%); z-index: 10;
-            background: #000; /* Fundo preto sólido */
-            border: 4px solid #fff; /* Borda branca nítida */
+            background: #000; 
+            border: 4px solid #fff; 
             box-shadow: 0 0 15px rgba(0,0,0,0.8);
         }
 
-        /* --- VISUAIS DO DARDO (Volta o 🎯) --- */
+        /* --- VISUAIS DO DARDO --- */
         #projectile-dart {
             position: absolute; 
             bottom: -150px; left: 50%; 
-            transform: translateX(-50%); /* Sem rotação inicial */
-            font-size: 70px; /* Tamanho bom */
+            transform: translateX(-50%); 
+            font-size: 70px; 
             z-index: 30; display: none; pointer-events: none; 
             filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
         }
         
-        /* Trajetória para o CENTRO (Ajuste fino para o alvo do emoji bater no centro preto) */
         @keyframes dartTrajectoryCenter {
             0% { bottom: -150px; transform: translateX(-50%) scale(1.0); opacity: 1; }
-            /* Ajuste de bottom para centralizar o alvo do emoji */
             100% { bottom: 125px; transform: translateX(-50%) scale(1.0); opacity: 1; } 
         }
         .flying-dart-anim { animation: dartTrajectoryCenter 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
 
-        /* Dardo PRESO no centro (Centralizado perfeito) */
         #dardo-preso {
             position: absolute; top: 50%; left: 50%; width: 0; height: 0; z-index: 35; display: none; pointer-events: none;
         }
         #dardo-preso::after {
-            content: '🎯'; 
-            font-size: 45px; 
-            position: absolute;
-            /* Ajuste para centralizar o ícone no ponto 0,0 do container central */
-            top: -175px; left: -20px;
+            content: '🎯'; font-size: 45px; 
+            position: absolute; top: -175px; left: -20px;
             filter: drop-shadow(0 5px 8px rgba(0,0,0,0.6));
         }
 
@@ -115,7 +109,7 @@
         
         .resgate-card { background: var(--bg-panel); padding: 30px 20px; border-radius: 15px; border: 1px solid #333; text-align: center; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
         .cupom-box { background: #000; border: 2px dashed var(--gold); color: var(--gold); font-size: 2.2rem; padding: 15px; margin: 20px 0; font-weight: 900; letter-spacing: 2px; border-radius: 8px; }
-        .aviso-legal { font-size: 0.65rem; color: #fff; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; width: 100%; }
+        .aviso-legal { font-size: 0.65rem; color: #666; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; width: 100%; }
 
         /* ADMIN */
         #tela-admin { justify-content: flex-start; padding-top: 20px; background: #0a0a0a; z-index: 200; overflow-y: auto; }
@@ -141,7 +135,6 @@
 
         <div id="roleta-container">
             <div id="ponteiro"></div>
-            
             <div id="roleta-wrapper"></div>
             <div id="centro-roleta"></div>
             <div id="dardo-preso"></div>
@@ -165,7 +158,7 @@
             <p style="color:#aaa; font-size:0.9rem;">Seu prêmio foi garantido.</p>
             <h3 id="resgate-nome" style="font-size:1.4rem; margin:15px 0 5px 0;">...</h3>
             <div class="cupom-box" id="resgate-cupom">...</div>
-            <p style="font-size:0.8rem; color:#FFF; margin-bottom:20px;">Válido até: <span id="resgate-data"></span></p>
+            <p style="font-size:0.8rem; color:#888; margin-bottom:20px;">Válido até: <span id="resgate-data"></span></p>
             <button onclick="copiarCodigo()" class="btn-gold" style="width:100%; margin-bottom:10px;">COPIAR CÓDIGO</button>
             <a href="https://www.rmacellaio.com.br" target="_blank" class="btn-gold" style="background:#333; color:#fff; width:100%; line-height:50px; padding:0;">RESGATAR AGORA</a>
             <div class="aviso-legal">Atenção: Este prêmio é único e vinculado ao seu cadastro.</div>
@@ -180,21 +173,18 @@
     <div id="tela-admin" class="tela">
         <div class="header-title" style="font-size:1.2rem; margin-top:20px;">ADMINISTRAÇÃO</div>
         <div class="admin-section">
-            <h3>Prêmios & Pesos (Mestre)</h3>
-            <p style="font-size:0.7rem; color:#aaa;">O link gerado HERDA estes pesos.</p>
-            <div style="display:flex; gap:5px; font-size:0.7rem; color:#888; margin-bottom:5px;">
-                <span class="col-nome">NOME</span><span class="col-cupom">CUPOM</span><span class="col-peso">PESO</span>
-            </div>
+            <h3>Prêmios & Pesos (Default)</h3>
+            <p style="font-size:0.7rem; color:#aaa;">Configure aqui os prêmios padrões do jogo.</p>
             <div id="lista-premios"></div>
             <div style="margin-top:10px; display:flex; gap:10px;">
                 <button onclick="adicionarPremio()" class="btn-add">+ ITEM</button>
-                <button onclick="salvarPremiosAdmin()" class="btn-save">SALVAR PREMIOS</button>
+                <button onclick="salvarPremiosAdmin()" class="btn-save">SALVAR</button>
             </div>
         </div>
         <div class="admin-section">
             <h3>Gerar Campanha</h3>
             <input type="text" id="campanha-nome" class="input-admin" placeholder="Nome da Campanha (ex: PROMO10)">
-            <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK</button>
+            <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK CURTO</button>
             <div id="resultado-link" class="link-result"></div>
         </div>
         <br><br>
@@ -256,21 +246,16 @@
     window.onload = function() {
         const params = new URLSearchParams(window.location.search);
         
-        // ADMIN
+        // ADMIN - Carrega do LocalStorage para permitir edição
         if (params.get('admin') === '1' || params.get('admin') === 'true') { 
-            try { const stored = localStorage.getItem('macellaio_admin_config_v29'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } 
+            try { const stored = localStorage.getItem('macellaio_admin_config_v30'); premiosAtuais = stored ? JSON.parse(stored) : DEFAULT_PREMIOS; } 
             catch (e) { premiosAtuais = DEFAULT_PREMIOS; }
             abrirAdmin(); return; 
         }
 
-        // CLIENTE
-        const encodedData = params.get('d');
-        if (encodedData) {
-            try { premiosAtuais = JSON.parse(decodeURIComponent(atob(encodedData))); } 
-            catch(e) { premiosAtuais = DEFAULT_PREMIOS; }
-        } else {
-            premiosAtuais = DEFAULT_PREMIOS;
-        }
+        // CLIENTE - Carrega sempre o DEFAULT_PREMIOS (para link curto funcionar)
+        // Se quiser alterar para todos, edite a constante DEFAULT_PREMIOS no código.
+        premiosAtuais = DEFAULT_PREMIOS;
 
         const campanha = params.get('c'); 
         if (!campanha) { mostrarTela('tela-bloqueio'); return; }
@@ -297,11 +282,9 @@
     function arremessarDardo() {
         if (mode !== 'MOTOR') return;
         document.getElementById('btn-arremessar').classList.add('hidden');
-        
         const projectile = document.getElementById('projectile-dart'); 
         projectile.style.display = 'block'; projectile.classList.add('flying-dart-anim');
         
-        // SORTEIO PONDERADO
         let totalPeso = premiosAtuais.reduce((s, p) => s + (parseInt(p.peso) || 0), 0);
         let r = Math.random() * totalPeso;
         let cursor = 0; targetPrizeIndex = 0;
@@ -315,39 +298,28 @@
             targetPrizeIndex = Math.floor(Math.random() * premiosAtuais.length);
         }
 
-        // CÁLCULO DE ALVO (Alinhar 12h no momento do impacto no centro)
         const segArc = 360 / premiosAtuais.length; 
         const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
-        
-        // Target Rotation = Topo (360/0deg)
         let targetRotation = 360 - centerSegAngle;
         
         const currentMod = rotationAngle % 360; 
         let diff = targetRotation - currentMod; 
         if (diff < 0) diff += 360; 
         
-        // Ajuste de velocidade para sincronizar com a animação (350ms ~ 22 frames)
         const framesToImpact = 22; 
         const distanceNeeded = diff + 360; 
         velocity = distanceNeeded / framesToImpact; 
-        
         flyingFrames = 22;
         mode = 'FLYING';
     }
 
     function impactoDardo() {
-        // PARADA INSTANTÂNEA (LOCK)
-        mode = 'FINISHED'; 
-        stopSpinSound(); 
-        playThud();
-        
+        mode = 'FINISHED'; stopSpinSound(); playThud();
         document.getElementById('projectile-dart').style.display = 'none';
         
         const dardoPreso = document.getElementById('dardo-preso'); 
         dardoPreso.style.display = 'block';
-        // O CSS já centraliza o dardo fixo
-
-        // FORÇA A ROTAÇÃO EXATA DO PRÊMIO (Corrige desalinhamentos de frame)
+        
         const segArc = 360 / premiosAtuais.length;
         const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
         rotationAngle = 360 - centerSegAngle;
@@ -358,7 +330,6 @@
 
     function loopFisica() {
         if (mode === 'IDLE' || mode === 'FINISHED') return;
-
         if (mode === 'MOTOR') {
             if (velocity < 25) velocity += 0.8;
             rotationAngle += velocity;
@@ -366,9 +337,8 @@
         else if (mode === 'FLYING') {
             rotationAngle += velocity;
             flyingFrames--;
-            if (flyingFrames <= 0) impactoDardo(); // Chama impacto e trava
+            if (flyingFrames <= 0) impactoDardo();
         }
-
         document.getElementById('roleta-wrapper').style.transform = `rotate(${rotationAngle}deg)`;
         animFrame = requestAnimationFrame(loopFisica);
     }
@@ -391,7 +361,7 @@
         document.getElementById('dardo-preso').style.display = 'none'; document.getElementById('projectile-dart').classList.remove('flying-dart-anim');
     }
 
-    /* --- ADMINISTRAÇÃO & LINK --- */
+    /* --- ADMINISTRAÇÃO & LINK CURTO --- */
     function verificarSegredo() { segredoClicks++; if(segredoClicks >= 5) { alert("Acesso Admin!"); abrirAdmin(); }}
     function abrirAdmin() { document.getElementById('tela-admin').classList.add('ativa'); document.getElementById('tela-jogo').classList.remove('ativa'); document.getElementById('tela-bloqueio').classList.remove('ativa'); renderAdminPremios(); }
     
@@ -405,9 +375,34 @@
     }
     function adicionarPremio(){ saveM(); premiosAtuais.push({nome:"",cupom:"",peso:0,cor:CORES[premiosAtuais.length%CORES.length]}); renderAdminPremios(); }
     function rmP(i){ if(premiosAtuais.length<=2)return; if(confirm("Remover?")){ saveM(); premiosAtuais.splice(i,1); renderAdminPremios(); } }
-    function saveM(){ premiosAtuais.forEach((p,i)=>{ const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value; const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value; const w=document.getElementById(`p-${i}`); let wVal = parseInt(w.value); if(isNaN(wVal)) wVal = 0; p.peso = wVal; }); }
-    function salvarPremiosAdmin(){ saveM(); localStorage.setItem('macellaio_admin_config_v29', JSON.stringify(premiosAtuais)); alert("Salvo! Gere o link agora."); }
-    function gerarLink(){ const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); if(!n)return alert("Digite nome da campanha"); saveM(); const jsonConfig = JSON.stringify(premiosAtuais); const encodedConfig = btoa(encodeURIComponent(jsonConfig)); const u=`${location.origin}${location.pathname}?c=${n}&d=${encodedConfig}`; document.getElementById('resultado-link').style.display='block'; document.getElementById('resultado-link').innerHTML=`Link Seguro:<br><a href="${u}" style="color:#fff; word-break:break-all;">${u}</a>`; }
+    
+    function saveM(){ 
+        premiosAtuais.forEach((p,i)=>{ 
+            const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value; 
+            const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value; 
+            const w=document.getElementById(`p-${i}`); 
+            let wVal = parseInt(w.value);
+            if(isNaN(wVal)) wVal = 0;
+            p.peso = wVal; 
+        }); 
+    }
+    
+    function salvarPremiosAdmin(){ 
+        saveM(); 
+        localStorage.setItem('macellaio_admin_config_v30', JSON.stringify(premiosAtuais)); 
+        alert("Configuração Salva no Admin (Local). Para aplicar a todos, edite o código DEFAULT_PREMIOS."); 
+    }
+    
+    function gerarLink(){ 
+        const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); 
+        if(!n)return alert("Digite nome da campanha"); 
+        
+        // Link Curto Limpo
+        const u=`${location.origin}${location.pathname}?c=${n}`; 
+        document.getElementById('resultado-link').style.display='block'; 
+        document.getElementById('resultado-link').innerHTML=`Link Curto:<br><a href="${u}" style="color:#fff; word-break:break-all;">${u}</a>`; 
+    }
+
     function renderizarRoleta(){ const w=document.getElementById('roleta-wrapper'); w.innerHTML=''; const tot=premiosAtuais.length; const arc=360/tot; premiosAtuais.forEach((p,i)=>{ const s=document.createElement('div'); s.className='segmento'; const r=i*arc; const sk=90-arc; s.style.transform=`rotate(${r}deg) skewY(-${sk}deg)`; s.style.backgroundColor=p.cor; const c=document.createElement('div'); c.className='seg-conteudo'; c.style.transform=`skewY(${sk}deg) rotate(${arc/2}deg)`; c.innerHTML=`<span>${p.nome}</span>`; s.appendChild(c); w.appendChild(s); }); }
     function irResgate(){ if(!estado.premioFinal)return; estado.resgatado=true; estado.dataResgate=new Date().toISOString(); salvarEstadoUsuario(); montarTelaResgate(); mostrarTela('tela-resgate'); }
     function montarTelaResgate(){ const p=estado.premioFinal; document.getElementById('resgate-nome').innerText=p.nome; document.getElementById('resgate-cupom').innerText=p.cupom; const d=new Date(estado.dataResgate); d.setDate(d.getDate()+7); document.getElementById('resgate-data').innerText=d.toLocaleDateString('pt-BR'); }
@@ -419,8 +414,4 @@
     function copiarCodigo(){ navigator.clipboard.writeText(document.getElementById('resgate-cupom').innerText); alert("Copiado!"); }
 </script>
 </body>
-
 </html>
-
-
-
