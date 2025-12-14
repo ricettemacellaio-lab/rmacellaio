@@ -31,7 +31,7 @@
         }
         main { flex: 1; position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
 
-        /* MODAIS (GERAL) */
+        /* MODAIS */
         .modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 200;
@@ -99,6 +99,7 @@
             border: 2px solid #fff;
             animation: pulseVip 2s infinite;
             cursor: pointer;
+            font-size: 0.9rem;
         }
         @keyframes pulseVip { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
 
@@ -108,7 +109,10 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .resgate-card { background: var(--bg-panel); padding: 30px 20px; border-radius: 15px; border: 1px solid #333; text-align: center; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
         .cupom-box { background: #000; border: 2px dashed var(--gold); color: var(--gold); font-size: 2.2rem; padding: 15px; margin: 20px 0; font-weight: 900; letter-spacing: 2px; border-radius: 8px; }
-        .aviso-legal { font-size: 0.65rem; color: #666; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; width: 100%; }
+        
+        /* Ajuste de cor Branco */
+        .texto-branco { color: #fff !important; }
+        .aviso-legal { font-size: 0.65rem; color: #fff; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; width: 100%; }
 
         /* ADMIN */
         #tela-admin { justify-content: flex-start; padding-top: 20px; background: #0a0a0a; z-index: 200; overflow-y: auto; }
@@ -164,7 +168,7 @@
     <div id="modal-confirm-resgate" class="modal-overlay hidden">
         <div class="modal-box">
             <h2>Resgatar Prêmio?</h2>
-            <p>Ao confirmar, o jogo encerra e você garante este prêmio.</p>
+            <p>Ao confirmar, o jogo encerra e você garante este prêmio: <br><strong id="premio-resgate-nome" style="color:var(--gold); font-size:1.1rem;"></strong></p>
             <div class="modal-actions">
                 <button class="btn-modal btn-cancel" onclick="fecharModal('modal-confirm-resgate')">VOLTAR</button>
                 <button class="btn-modal btn-confirm" onclick="confirmarResgate()">RESGATAR</button>
@@ -175,7 +179,7 @@
     <div id="modal-confirm-spin" class="modal-overlay hidden">
         <div class="modal-box">
             <h2 style="color: var(--danger);">Tem certeza?</h2>
-            <p>Ao girar novamente, você <strong>PERDE</strong> o prêmio atual (<span id="premio-perdido-nome" style="color:#fff;"></span>) e arrisca um novo resultado.</p>
+            <p>Ao girar novamente, você <strong>PERDE</strong> o prêmio atual (<span id="premio-perdido-nome" style="color:var(--gold); font-weight:bold;"></span>), quer arriscar um novo resultado?</p>
             <div class="modal-actions">
                 <button class="btn-modal btn-cancel" onclick="fecharModal('modal-confirm-spin')">CANCELAR</button>
                 <button class="btn-modal btn-confirm" onclick="confirmarNovoGiro()">ARRISCAR</button>
@@ -212,15 +216,16 @@
             <p style="color:#aaa; font-size:0.9rem;">Seu prêmio foi garantido.</p>
             <h3 id="resgate-nome" style="font-size:1.4rem; margin:15px 0 5px 0;">...</h3>
             <div class="cupom-box" id="resgate-cupom">...</div>
-            <p style="font-size:0.8rem; color:#888; margin-bottom:20px;">Válido até: <span id="resgate-data"></span></p>
+            
+            <p style="font-size:0.8rem; color:#fff; margin-bottom:20px;">Válido até: <span id="resgate-data"></span></p>
             
             <button onclick="copiarCodigo()" class="btn-gold" style="width:100%; margin-bottom:10px;">COPIAR CÓDIGO</button>
             
             <a id="btn-resgate-link" href="#" target="_blank" class="btn-gold" style="background:#333; color:#fff; width:100%; line-height:50px; padding:0;">RESGATAR AGORA</a>
             
-            <button id="btn-vip-trigger" onclick="abrirModalVip()" class="btn-vip-action hidden">👑 GRUPO VIP (Roletas Douradas)</button>
+            <button id="btn-vip-trigger" onclick="abrirModalVip()" class="btn-vip-action hidden">CLUBE VIP (Conheça os benefícios)</button>
 
-            <div class="aviso-legal">Atenção: Este prêmio é único e vinculado ao seu cadastro.</div>
+            <div class="aviso-legal" style="color:#fff;">Atenção: Este prêmio é único e vinculado ao seu cadastro.</div>
         </div>
     </div>
 
@@ -354,9 +359,9 @@
         // ADMIN
         if (params.get('admin') === '1' || params.get('admin') === 'true') { 
             try { 
-                const storedP = localStorage.getItem('macellaio_admin_premios_v35');
+                const storedP = localStorage.getItem('macellaio_admin_premios_v36');
                 premiosAtuais = storedP ? JSON.parse(storedP) : DEFAULT_PREMIOS;
-                const storedS = localStorage.getItem('macellaio_admin_style_v35');
+                const storedS = localStorage.getItem('macellaio_admin_style_v36');
                 styleAtual = storedS ? JSON.parse(storedS) : DEFAULT_STYLE;
             } catch (e) { premiosAtuais = DEFAULT_PREMIOS; styleAtual = DEFAULT_STYLE; }
             aplicarEstilo(styleAtual); abrirAdmin(); return; 
@@ -396,7 +401,13 @@
     /* ---------------- FUNÇÕES DE MODAL E FLUXO ---------------- */
     function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
     
-    function abrirConfirmacaoResgate() { document.getElementById('modal-confirm-resgate').classList.remove('hidden'); }
+    function abrirConfirmacaoResgate() { 
+        if(estado.premioFinal) {
+            document.getElementById('premio-resgate-nome').innerText = estado.premioFinal.nome;
+        }
+        document.getElementById('modal-confirm-resgate').classList.remove('hidden'); 
+    }
+    
     function confirmarResgate() {
         fecharModal('modal-confirm-resgate');
         irResgate();
@@ -565,8 +576,8 @@
     
     function salvarConfigAdmin(){ 
         captureState(); 
-        localStorage.setItem('macellaio_admin_premios_v35', JSON.stringify(premiosAtuais)); 
-        localStorage.setItem('macellaio_admin_style_v35', JSON.stringify(styleAtual)); 
+        localStorage.setItem('macellaio_admin_premios_v36', JSON.stringify(premiosAtuais)); 
+        localStorage.setItem('macellaio_admin_style_v36', JSON.stringify(styleAtual)); 
         alert("Configuração Salva! O link gerado conterá essas cores e prêmios."); 
     }
     
