@@ -85,21 +85,12 @@
         .btn-throw { background: #E91E63; color: white; box-shadow: 0 0 20px rgba(233, 30, 99, 0.5); }
         .btn-outline { background: transparent; border: 2px solid #555; color: #fff; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
         
-        /* BOTÃO VIP (Dourado Pulsante) */
         .btn-vip-action {
-            display: block;
-            width: 100%;
+            display: block; width: 100%;
             background: linear-gradient(45deg, #FFC107, #FFD54F, #FFC107);
-            color: #000;
-            font-weight: 900;
-            padding: 15px;
-            border-radius: 10px;
-            text-decoration: none;
-            margin-top: 15px;
-            border: 2px solid #fff;
-            animation: pulseVip 2s infinite;
-            cursor: pointer;
-            font-size: 0.9rem;
+            color: #000; font-weight: 900; padding: 15px; border-radius: 10px;
+            text-decoration: none; margin-top: 15px; border: 2px solid #fff;
+            animation: pulseVip 2s infinite; cursor: pointer; font-size: 0.9rem;
         }
         @keyframes pulseVip { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
 
@@ -109,9 +100,6 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .resgate-card { background: var(--bg-panel); padding: 30px 20px; border-radius: 15px; border: 1px solid #333; text-align: center; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
         .cupom-box { background: #000; border: 2px dashed var(--gold); color: var(--gold); font-size: 2.2rem; padding: 15px; margin: 20px 0; font-weight: 900; letter-spacing: 2px; border-radius: 8px; }
-        
-        /* Ajuste de cor Branco */
-        .texto-branco { color: #fff !important; }
         .aviso-legal { font-size: 0.65rem; color: #fff; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; width: 100%; }
 
         /* ADMIN */
@@ -157,7 +145,6 @@
                 <li>💎 Prêmios Mensais Exclusivos</li>
             </ul>
             <p style="font-size: 0.8rem; color: #aaa;">Apenas para membros do grupo.</p>
-            
             <div class="modal-actions" style="flex-direction: column;">
                 <button class="btn-modal btn-confirm" onclick="confirmarVip()" style="width: 100%; background: #FFD700;">QUERO PARTICIPAR AGORA</button>
                 <button class="btn-modal btn-cancel" onclick="fecharModal('modal-vip-info')" style="width: 100%; border: none; color: #666;">Talvez depois</button>
@@ -220,9 +207,7 @@
             <p style="font-size:0.8rem; color:#fff; margin-bottom:20px;">Válido até: <span id="resgate-data"></span></p>
             
             <button onclick="copiarCodigo()" class="btn-gold" style="width:100%; margin-bottom:10px;">COPIAR CÓDIGO</button>
-            
             <a id="btn-resgate-link" href="#" target="_blank" class="btn-gold" style="background:#333; color:#fff; width:100%; line-height:50px; padding:0;">RESGATAR AGORA</a>
-            
             <button id="btn-vip-trigger" onclick="abrirModalVip()" class="btn-vip-action hidden">CLUBE VIP (Conheça os benefícios)</button>
 
             <div class="aviso-legal" style="color:#fff;">Atenção: Este prêmio é único e vinculado ao seu cadastro.</div>
@@ -263,6 +248,9 @@
 
             <label style="color:#ccc; font-size:0.8rem; margin-top:10px;">Link Grupo VIP (Opcional):</label>
             <input type="text" id="custom-vip-url" class="input-admin" placeholder="https://whatsapp...">
+
+            <label style="color:#ccc; font-size:0.8rem; margin-top:10px;">Áudio de Voz (Vitória) - URL MP3:</label>
+            <input type="text" id="custom-voice-url" class="input-admin" placeholder="https://exemplo.com/voz.mp3">
 
             <label style="color:#ccc; font-size:0.8rem; margin-top:10px; display:block;">Fundo (URL):</label>
             <input type="text" id="custom-bg-url" class="input-admin" onchange="previewCustomizations()">
@@ -321,6 +309,20 @@
         osc.type = 'square'; osc.start(); osc.stop(audioCtx.currentTime + 0.15);
     }
     function playWin() {
+        // Lógica Híbrida (Voz Personalizada ou Sintetizador)
+        if (styleAtual.voiceUrl && styleAtual.voiceUrl.trim() !== "") {
+            const voiceAudio = new Audio(styleAtual.voiceUrl);
+            voiceAudio.volume = 1.0;
+            voiceAudio.play().catch(e => {
+                console.log("Erro ao tocar voz (fallback):", e);
+                playSynthWin(); // Fallback se falhar
+            });
+        } else {
+            playSynthWin();
+        }
+    }
+    
+    function playSynthWin() {
         const now = audioCtx.currentTime;
         [523, 659, 784, 1046].forEach((f,i) => {
             const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
@@ -346,7 +348,8 @@
         bgColor: '#0f0f0f',
         font: "'Roboto', sans-serif",
         vipUrl: "",
-        redeemUrl: "https://www.rmacellaio.com.br"
+        redeemUrl: "https://www.rmacellaio.com.br",
+        voiceUrl: ""
     };
     
     let premiosAtuais, styleAtual, estado = { campanha: null, giros: 0, maxGiros: 3, resgatado: false, premioFinal: null, dataResgate: null };
@@ -359,15 +362,15 @@
         // ADMIN
         if (params.get('admin') === '1' || params.get('admin') === 'true') { 
             try { 
-                const storedP = localStorage.getItem('macellaio_admin_premios_v36');
+                const storedP = localStorage.getItem('macellaio_admin_premios_v37');
                 premiosAtuais = storedP ? JSON.parse(storedP) : DEFAULT_PREMIOS;
-                const storedS = localStorage.getItem('macellaio_admin_style_v36');
+                const storedS = localStorage.getItem('macellaio_admin_style_v37');
                 styleAtual = storedS ? JSON.parse(storedS) : DEFAULT_STYLE;
             } catch (e) { premiosAtuais = DEFAULT_PREMIOS; styleAtual = DEFAULT_STYLE; }
             aplicarEstilo(styleAtual); abrirAdmin(); return; 
         }
 
-        // CLIENTE (Link Data ou Default)
+        // CLIENTE
         const encodedData = params.get('d');
         if (encodedData) {
             try { 
@@ -386,7 +389,6 @@
         estado.campanha = campanha; 
         carregarEstadoUsuario();
         
-        // MOSTRAR TUTORIAL SE FOR A PRIMEIRA VEZ
         const temEstado = localStorage.getItem(getKey());
         if(!temEstado) {
             document.getElementById('modal-tutorial').classList.remove('hidden');
@@ -398,7 +400,6 @@
         } else { renderizarRoleta(); atualizarUI(); mostrarTela('tela-jogo'); }
     };
 
-    /* ---------------- FUNÇÕES DE MODAL E FLUXO ---------------- */
     function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
     
     function abrirConfirmacaoResgate() { 
@@ -422,7 +423,6 @@
         resetarJogo();
     }
 
-    // --- LÓGICA VIP ---
     function abrirModalVip() {
         document.getElementById('modal-vip-info').classList.remove('hidden');
     }
@@ -439,7 +439,6 @@
         if(style.bgUrl && style.bgUrl.trim() !== "") document.getElementById('fundo-overlay').style.backgroundImage = `url('${style.bgUrl}')`;
         else document.getElementById('fundo-overlay').style.backgroundImage = 'none';
         
-        // Links
         document.getElementById('btn-resgate-link').href = style.redeemUrl || "https://www.rmacellaio.com.br";
         
         const btnVipTrigger = document.getElementById('btn-vip-trigger');
@@ -543,6 +542,7 @@
         document.getElementById('custom-font').value = styleAtual.font;
         document.getElementById('custom-vip-url').value = styleAtual.vipUrl || "";
         document.getElementById('custom-redeem-url').value = styleAtual.redeemUrl || "";
+        document.getElementById('custom-voice-url').value = styleAtual.voiceUrl || "";
     }
     
     function renderAdminPremios() { 
@@ -570,14 +570,15 @@
         styleAtual.font = document.getElementById('custom-font').value;
         styleAtual.vipUrl = document.getElementById('custom-vip-url').value;
         styleAtual.redeemUrl = document.getElementById('custom-redeem-url').value;
+        styleAtual.voiceUrl = document.getElementById('custom-voice-url').value;
     }
     
     function previewCustomizations() { captureState(); aplicarEstilo(styleAtual); }
     
     function salvarConfigAdmin(){ 
         captureState(); 
-        localStorage.setItem('macellaio_admin_premios_v36', JSON.stringify(premiosAtuais)); 
-        localStorage.setItem('macellaio_admin_style_v36', JSON.stringify(styleAtual)); 
+        localStorage.setItem('macellaio_admin_premios_v37', JSON.stringify(premiosAtuais)); 
+        localStorage.setItem('macellaio_admin_style_v37', JSON.stringify(styleAtual)); 
         alert("Configuração Salva! O link gerado conterá essas cores e prêmios."); 
     }
     
