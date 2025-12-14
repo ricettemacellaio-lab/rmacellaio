@@ -9,7 +9,6 @@
         /* --- ESTILOS GERAIS --- */
         :root {
             --gold: #FFC107; 
-            --gold-dark: #FFB300;
             --bg-page: #0f0f0f;
             --bg-panel: #1E1E1E;
             --text-main: #ffffff;
@@ -32,24 +31,29 @@
         }
         main { flex: 1; position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
 
-        /* MODAL TUTORIAL */
+        /* MODAIS (TUTORIAL E CONFIRMAÇÕES) */
         .modal-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 200;
+            background: rgba(0,0,0,0.9); z-index: 200;
             display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(4px);
         }
         .modal-box {
-            background: var(--bg-panel); width: 90%; max-width: 350px;
-            padding: 25px; border-radius: 15px; border: 2px solid var(--gold);
+            background: var(--bg-panel); width: 85%; max-width: 320px;
+            padding: 20px; border-radius: 12px; border: 1px solid var(--gold);
             text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.8);
-            animation: popIn 0.4s ease;
+            animation: popIn 0.3s ease;
         }
-        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-box h2 { color: var(--gold); margin-top: 0; text-transform: uppercase; }
-        .modal-box ul { text-align: left; padding-left: 20px; font-size: 0.9rem; color: #ddd; line-height: 1.5; }
-        .modal-box li { margin-bottom: 10px; }
-        .btn-modal { background: var(--gold); color: #000; font-weight: bold; border: none; padding: 12px 30px; border-radius: 50px; cursor: pointer; font-size: 1rem; margin-top: 15px; width: 100%; }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-box h2 { color: var(--gold); margin-top: 0; font-size: 1.2rem; text-transform: uppercase; }
+        .modal-box p { font-size: 0.9rem; color: #ccc; margin-bottom: 20px; line-height: 1.4; }
+        .modal-box ul { text-align: left; padding-left: 20px; font-size: 0.85rem; color: #ddd; line-height: 1.4; }
+        .modal-box li { margin-bottom: 8px; }
+        
+        .modal-actions { display: flex; gap: 10px; justify-content: center; }
+        .btn-modal { flex: 1; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; font-size: 0.9rem; }
+        .btn-confirm { background: var(--gold); color: #000; }
+        .btn-cancel { background: transparent; border: 1px solid #555; color: #fff; }
 
         /* HEADER */
         .header-title { 
@@ -63,15 +67,10 @@
         /* ROLETA */
         #roleta-container { position: relative; width: 320px; height: 320px; margin-bottom: 60px; margin-top: 30px; }
         #roleta-wrapper { width: 100%; height: 100%; border-radius: 50%; position: relative; overflow: hidden; border: 8px solid #fff; box-shadow: 0 0 40px rgba(0,0,0,0.8); transform: rotate(0deg); z-index: 5; }
-        
-        /* Ponteiro Amarelo (TOPO) */
         #ponteiro { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 25px solid transparent; border-right: 25px solid transparent; border-top: 50px solid var(--gold); opacity: 0.9; z-index: 25; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3)); }
-
         .segmento { position: absolute; top: 0; right: 0; width: 50%; height: 50%; transform-origin: 0% 100%; overflow: hidden; }
         .seg-conteudo { position: absolute; left: -100%; width: 200%; height: 200%; text-align: center; padding-top: 40px; font-size: 0.75rem; font-weight: 700; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); display: flex; justify-content: center; }
         .seg-conteudo span { display: block; width: 80px; line-height: 1.1; }
-
-        /* CENTRO & DARDO */
         #centro-roleta { position: absolute; top: 48%; left: 50%; width: 50px; height: 50px; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; background: radial-gradient(circle, #d32f2f 0%, #d32f2f 25%, #fff 25%, #fff 50%, #d32f2f 50%, #d32f2f 75%, #fff 75%, #fff 100%); border: 4px solid #000; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
         #projectile-dart { position: absolute; bottom: -150px; left: 50%; transform: translateX(-50%) rotate(180deg); font-size: 80px; z-index: 30; display: none; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
         @keyframes dartTrajectoryCenter { 0% { bottom: -150px; transform: translateX(-50%) scale(1.0); opacity: 1; } 100% { bottom: 140px; transform: translateX(-50%) scale(0.9); opacity: 1; } }
@@ -85,17 +84,21 @@
         .btn-throw { background: #E91E63; color: white; box-shadow: 0 0 20px rgba(233, 30, 99, 0.5); }
         .btn-outline { background: transparent; border: 2px solid #555; color: #fff; padding: 10px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 0.9rem; }
         
-        /* BOTÃO VIP */
-        .btn-vip {
-            background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700);
-            background-size: 200% 200%;
-            color: #000;
-            animation: gradientAnim 3s ease infinite, pulseVip 2s infinite;
+        /* BOTÃO VIP DISCRETO */
+        .btn-vip-discreto {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-size: 0.8rem;
+            padding: 10px 20px;
             margin-top: 15px;
-            border: 2px solid #fff;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 50px;
+            opacity: 0.8;
+            transition: all 0.2s;
         }
-        @keyframes gradientAnim { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes pulseVip { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        .btn-vip-discreto:hover { opacity: 1; background: rgba(255, 193, 7, 0.1); }
 
         /* TELAS */
         .tela { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
@@ -127,14 +130,36 @@
 
     <div id="modal-tutorial" class="modal-overlay hidden">
         <div class="modal-box">
-            <h2>Como Jogar</h2>
+            <h2>Regras do Jogo</h2>
             <ul>
-                <li>🔒 <strong>Link Único:</strong> Este acesso é exclusivo e intransferível.</li>
-                <li>🎯 <strong>3 Chances:</strong> Você pode girar a roleta até 3 vezes.</li>
-                <li>⚠️ <strong>Risco:</strong> Se girar novamente, você <strong>perde</strong> o prêmio anterior.</li>
-                <li>🏆 <strong>Resgate:</strong> Ao clicar em "Resgatar", o prêmio é final e o jogo encerra.</li>
+                <li>🔒 <strong>Link Único:</strong> Este link é seu e não pode ser transferido.</li>
+                <li>🎯 <strong>3 Chances:</strong> Você pode girar até 3 vezes.</li>
+                <li>⚠️ <strong>Decisão:</strong> Você pode parar e resgatar a qualquer momento.</li>
+                <li>🔄 <strong>Girar de Novo:</strong> Se girar novamente, o prêmio anterior é <strong>descartado</strong>.</li>
             </ul>
-            <button class="btn-modal" onclick="fecharTutorial()">ENTENDI, VAMOS LÁ!</button>
+            <button class="btn-modal btn-confirm" onclick="fecharModal('modal-tutorial')">ENTENDI, VAMOS LÁ!</button>
+        </div>
+    </div>
+
+    <div id="modal-confirm-resgate" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2>Resgatar Prêmio?</h2>
+            <p>Ao confirmar, o jogo encerra e este será seu prêmio final. Você não poderá girar novamente.</p>
+            <div class="modal-actions">
+                <button class="btn-modal btn-cancel" onclick="fecharModal('modal-confirm-resgate')">CANCELAR</button>
+                <button class="btn-modal btn-confirm" onclick="confirmarResgate()">RESGATAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-confirm-spin" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2>Girar Novamente?</h2>
+            <p>⚠️ Atenção: Ao girar de novo, você <strong>PERDE</strong> o prêmio atual (<span id="premio-perdido-nome"></span>) e ficará com o próximo resultado.</p>
+            <div class="modal-actions">
+                <button class="btn-modal btn-cancel" onclick="fecharModal('modal-confirm-spin')">CANCELAR</button>
+                <button class="btn-modal btn-confirm" onclick="confirmarNovoGiro()">GIRAR</button>
+            </div>
         </div>
     </div>
 
@@ -154,10 +179,10 @@
         <button id="btn-arremessar" class="btn-gold btn-throw hidden" onclick="arremessarDardo()">ATIRAR DARDO!</button>
 
         <div id="msg-resultado" class="hidden" style="margin-top:20px; text-align:center;">
-            <p style="color:#aaa; font-size:0.9rem; margin-bottom:5px;">Resultado:</p>
+            <p style="color:#aaa; font-size:0.9rem; margin-bottom:5px;">Você acertou em:</p>
             <h3 id="txt-premio-atual" style="color:var(--gold); font-size:1.5rem; margin:0 0 20px 0;">...</h3>
-            <button id="btn-resgatar-home" class="btn-gold" style="padding:12px 30px; font-size:0.9rem; width:auto;" onclick="irResgate()">RESGATAR</button>
-            <button id="btn-girar-dnv" class="btn-outline" style="margin-left:10px;" onclick="resetarJogo()">GIRAR DE NOVO</button>
+            <button id="btn-resgatar-home" class="btn-gold" style="padding:12px 30px; font-size:0.9rem; width:auto;" onclick="abrirConfirmacaoResgate()">RESGATAR</button>
+            <button id="btn-girar-dnv" class="btn-outline" style="margin-left:10px;" onclick="abrirConfirmacaoGiro()">GIRAR DE NOVO</button>
         </div>
     </div>
 
@@ -170,9 +195,10 @@
             <p style="font-size:0.8rem; color:#888; margin-bottom:20px;">Válido até: <span id="resgate-data"></span></p>
             
             <button onclick="copiarCodigo()" class="btn-gold" style="width:100%; margin-bottom:10px;">COPIAR CÓDIGO</button>
-            <a href="https://www.rmacellaio.com.br" target="_blank" class="btn-gold" style="background:#333; color:#fff; width:100%; line-height:50px; padding:0;">RESGATAR AGORA</a>
             
-            <a id="btn-vip-link" href="#" target="_blank" class="btn-gold btn-vip" style="width:100%; line-height:50px; padding:0; text-decoration:none; display:block;">👑 GRUPO VIP (Roletas Douradas)</a>
+            <a id="btn-resgate-link" href="#" target="_blank" class="btn-gold" style="background:#333; color:#fff; width:100%; line-height:50px; padding:0;">RESGATAR AGORA</a>
+            
+            <a id="btn-vip-link" href="#" target="_blank" class="btn-vip-discreto hidden">👑 Entrar no Grupo VIP</a>
 
             <div class="aviso-legal">Atenção: Este prêmio é único e vinculado ao seu cadastro.</div>
         </div>
@@ -203,11 +229,14 @@
         </div>
 
         <div class="admin-section">
-            <h3>Personalização</h3>
+            <h3>Links e Títulos</h3>
             <label style="color:#ccc; font-size:0.8rem;">Título:</label>
             <input type="text" id="custom-title" class="input-admin" oninput="previewCustomizations()">
             
-            <label style="color:#ccc; font-size:0.8rem;">Link Grupo VIP:</label>
+            <label style="color:#ccc; font-size:0.8rem; margin-top:10px;">Link "Resgatar Agora":</label>
+            <input type="text" id="custom-redeem-url" class="input-admin" placeholder="https://seudelivery...">
+
+            <label style="color:#ccc; font-size:0.8rem; margin-top:10px;">Link Grupo VIP (Opcional):</label>
             <input type="text" id="custom-vip-url" class="input-admin" placeholder="https://whatsapp...">
 
             <label style="color:#ccc; font-size:0.8rem; margin-top:10px; display:block;">Fundo (URL):</label>
@@ -291,7 +320,8 @@
         mainColor: '#FFC107',
         bgColor: '#0f0f0f',
         font: "'Roboto', sans-serif",
-        vipUrl: "#"
+        vipUrl: "",
+        redeemUrl: "https://www.rmacellaio.com.br"
     };
     
     let premiosAtuais, styleAtual, estado = { campanha: null, giros: 0, maxGiros: 3, resgatado: false, premioFinal: null, dataResgate: null };
@@ -304,9 +334,9 @@
         // ADMIN
         if (params.get('admin') === '1' || params.get('admin') === 'true') { 
             try { 
-                const storedP = localStorage.getItem('macellaio_admin_premios_v33');
+                const storedP = localStorage.getItem('macellaio_admin_premios_v34');
                 premiosAtuais = storedP ? JSON.parse(storedP) : DEFAULT_PREMIOS;
-                const storedS = localStorage.getItem('macellaio_admin_style_v33');
+                const storedS = localStorage.getItem('macellaio_admin_style_v34');
                 styleAtual = storedS ? JSON.parse(storedS) : DEFAULT_STYLE;
             } catch (e) { premiosAtuais = DEFAULT_PREMIOS; styleAtual = DEFAULT_STYLE; }
             aplicarEstilo(styleAtual); abrirAdmin(); return; 
@@ -331,7 +361,7 @@
         estado.campanha = campanha; 
         carregarEstadoUsuario();
         
-        // MOSTRAR TUTORIAL SE FOR A PRIMEIRA VEZ (Se não tiver estado salvo ainda)
+        // MOSTRAR TUTORIAL SE FOR A PRIMEIRA VEZ
         const temEstado = localStorage.getItem(getKey());
         if(!temEstado) {
             document.getElementById('modal-tutorial').classList.remove('hidden');
@@ -343,7 +373,23 @@
         } else { renderizarRoleta(); atualizarUI(); mostrarTela('tela-jogo'); }
     };
 
-    function fecharTutorial() { document.getElementById('modal-tutorial').classList.add('hidden'); }
+    /* ---------------- FUNÇÕES DE MODAL E FLUXO ---------------- */
+    function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
+    
+    function abrirConfirmacaoResgate() { document.getElementById('modal-confirm-resgate').classList.remove('hidden'); }
+    function confirmarResgate() {
+        fecharModal('modal-confirm-resgate');
+        irResgate();
+    }
+
+    function abrirConfirmacaoGiro() { 
+        document.getElementById('premio-perdido-nome').innerText = estado.premioFinal ? estado.premioFinal.nome : "...";
+        document.getElementById('modal-confirm-spin').classList.remove('hidden'); 
+    }
+    function confirmarNovoGiro() {
+        fecharModal('modal-confirm-spin');
+        resetarJogo();
+    }
 
     function aplicarEstilo(style) {
         document.documentElement.style.setProperty('--gold', style.mainColor);
@@ -352,7 +398,17 @@
         if(style.title) { document.getElementById('display-title').innerText = style.title; document.title = style.title; }
         if(style.bgUrl && style.bgUrl.trim() !== "") document.getElementById('fundo-overlay').style.backgroundImage = `url('${style.bgUrl}')`;
         else document.getElementById('fundo-overlay').style.backgroundImage = 'none';
-        if(style.vipUrl) document.getElementById('btn-vip-link').href = style.vipUrl;
+        
+        // Links
+        document.getElementById('btn-resgate-link').href = style.redeemUrl || "https://www.rmacellaio.com.br";
+        
+        const btnVip = document.getElementById('btn-vip-link');
+        if(style.vipUrl && style.vipUrl.trim() !== "") {
+            btnVip.href = style.vipUrl;
+            btnVip.classList.remove('hidden');
+        } else {
+            btnVip.classList.add('hidden');
+        }
     }
 
     /* ---------------- LÓGICA DO JOGO ---------------- */
@@ -447,6 +503,7 @@
         document.getElementById('custom-color-bg').value = styleAtual.bgColor;
         document.getElementById('custom-font').value = styleAtual.font;
         document.getElementById('custom-vip-url').value = styleAtual.vipUrl || "";
+        document.getElementById('custom-redeem-url').value = styleAtual.redeemUrl || "";
     }
     
     function renderAdminPremios() { 
@@ -473,14 +530,15 @@
         styleAtual.bgColor = document.getElementById('custom-color-bg').value;
         styleAtual.font = document.getElementById('custom-font').value;
         styleAtual.vipUrl = document.getElementById('custom-vip-url').value;
+        styleAtual.redeemUrl = document.getElementById('custom-redeem-url').value;
     }
     
     function previewCustomizations() { captureState(); aplicarEstilo(styleAtual); }
     
     function salvarConfigAdmin(){ 
         captureState(); 
-        localStorage.setItem('macellaio_admin_premios_v33', JSON.stringify(premiosAtuais)); 
-        localStorage.setItem('macellaio_admin_style_v33', JSON.stringify(styleAtual)); 
+        localStorage.setItem('macellaio_admin_premios_v34', JSON.stringify(premiosAtuais)); 
+        localStorage.setItem('macellaio_admin_style_v34', JSON.stringify(styleAtual)); 
         alert("Configuração Salva! O link gerado conterá essas cores e prêmios."); 
     }
     
