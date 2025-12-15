@@ -72,21 +72,12 @@
         .segmento { position: absolute; top: 0; right: 0; width: 50%; height: 50%; transform-origin: 0% 100%; overflow: hidden; }
         .seg-conteudo { position: absolute; left: -100%; width: 200%; height: 200%; text-align: center; padding-top: 40px; font-size: 0.75rem; font-weight: 700; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.9); display: flex; justify-content: center; }
         .seg-conteudo span { display: block; width: 80px; line-height: 1.1; }
-        
         #centro-roleta { position: absolute; top: 48%; left: 50%; width: 50px; height: 50px; border-radius: 50%; transform: translate(-50%, -50%); z-index: 10; background: radial-gradient(circle, #d32f2f 0%, #d32f2f 25%, #fff 25%, #fff 50%, #d32f2f 50%, #d32f2f 75%, #fff 75%, #fff 100%); border: 4px solid #000; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
         #projectile-dart { position: absolute; bottom: -150px; left: 50%; transform: translateX(-50%) rotate(180deg); font-size: 80px; z-index: 30; display: none; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
         @keyframes dartTrajectoryCenter { 0% { bottom: -150px; transform: translateX(-50%) scale(1.0); opacity: 1; } 100% { bottom: 140px; transform: translateX(-50%) scale(0.9); opacity: 1; } }
         .flying-dart-anim { animation: dartTrajectoryCenter 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
-        
         #dardo-preso { position: absolute; top: 48%; left: 50%; width: 0; height: 0; z-index: 35; display: none; pointer-events: none; }
-        #dardo-preso::after { 
-            content: '🎯'; 
-            font-size: 40px; 
-            position: absolute; 
-            top: -158px; 
-            left: -04px; 
-            filter: drop-shadow(0 5px 8px rgba(0,0,0,0.6)); 
-        }
+        #dardo-preso::after { content: '🎯'; font-size: 40px; position: absolute; top: -158px; left: -04px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.6)); }
 
         /* BOTÕES */
         .btn-gold { background: var(--gold); color: #000; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; border: none; padding: 18px 0; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(0,0,0,0.4); width: 85%; max-width: 300px; transition: transform 0.1s; position: relative; z-index: 101; }
@@ -130,7 +121,6 @@
             padding: 8px 15px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;
             margin-top: 5px; width: 100%; text-transform: uppercase;
         }
-        .btn-reset-test:hover { background: var(--danger); color: #fff; }
     </style>
 </head>
 <body>
@@ -241,8 +231,11 @@
         <div class="header-title" style="font-size:1.2rem; margin-top:20px;">ADMINISTRAÇÃO</div>
         
         <div class="admin-section">
-            <h3>Prêmios, Cores & Pesos</h3>
-            <p style="font-size:0.7rem; color:#aaa;">O link gerado HERDA estes dados.</p>
+            <h3>Prêmios, Cores & Pesos (Mestre)</h3>
+            <p style="font-size:0.7rem; color:#aaa;">⚠️ <strong>Dica:</strong> Se você alterar algo aqui, clique em "SALVAR TUDO" e <strong>RECARREGUE A PÁGINA</strong> para testar. O link curto sempre usará o que está no código <strong>DEFAULT_PREMIOS</strong> (edite o arquivo HTML para mudar para todos).</p>
+            
+            <button onclick="copiarJsonConfig()" class="btn-outline" style="width:100%; margin-bottom:15px; border-color:#fff; color:#fff;">📋 COPIAR CONFIG (JSON) PARA CÓDIGO</button>
+
             <div style="display:flex; gap:5px; font-size:0.7rem; color:#888; margin-bottom:5px;">
                 <span style="flex:2">NOME</span>
                 <span style="flex:1.5">CUPOM</span>
@@ -334,7 +327,7 @@
             voiceAudio.volume = 1.0;
             voiceAudio.play().catch(e => {
                 console.log("Erro ao tocar voz (fallback):", e);
-                playSynthWin(); // Fallback se falhar
+                playSynthWin(); 
             });
         } else {
             playSynthWin();
@@ -352,14 +345,16 @@
     }
 
     /* ---------------- DADOS E INICIALIZAÇÃO ---------------- */
+    // --- COLE O JSON AQUI PARA MUDAR O PADRÃO PARA TODOS OS LINKS CURTOS ---
     const DEFAULT_PREMIOS = [
-        { nome: "10% OFF", cupom: "DESC10", cor: "#e53935", peso: 10 }, 
-        { nome: "Frete Grátis", cupom: "FREE", cor: "#43A047", peso: 5 },
-        { nome: "BOGO", cupom: "BOGO", cor: "#8E24AA", peso: 2 }, 
-        { nome: "Sobremesa", cupom: "DOCE", cor: "#FB8C00", peso: 10 },
-        { nome: "5% OFF", cupom: "DESC05", cor: "#FDD835", peso: 20 }, 
-        { nome: "Tente de Novo", cupom: "", cor: "#78909C", peso: 50 } 
+        { nome: "Mais um Steak", cupom: "01STEAK", cor: "#d32f2f", peso: 20 }, 
+        { nome: "Frete Grátis", cupom: "RMFRETE", cor: "#8e24aa", peso: 20 },
+        { nome: "5% OFF", cupom: "DESC05OFF", cor: "#fdd835", peso: 20 }, 
+        { nome: "R$ 5,00", cupom: "DESC5RM", cor: "#00acc1", peso: 20 },
+        { nome: "Batata Frita", cupom: "FRITASRM", cor: "#fb8c00", peso: 0 }, 
+        { nome: "01 PCQ", cupom: "RMPCQ", cor: "#00e676", peso: 0 } 
     ];
+    
     const DEFAULT_STYLE = {
         title: "MACELLAIO REWARDS",
         bgUrl: 'https://img.freepik.com/fotos-gratis/hamburguer-vista-frontal-em-tua-de-madeira-escura_23-2148234991.jpg',
@@ -381,25 +376,17 @@
         // ADMIN
         if (params.get('admin') === '1' || params.get('admin') === 'true') { 
             try { 
-                const storedP = localStorage.getItem('macellaio_admin_premios_v38');
+                const storedP = localStorage.getItem('macellaio_admin_premios_v40');
                 premiosAtuais = storedP ? JSON.parse(storedP) : DEFAULT_PREMIOS;
-                const storedS = localStorage.getItem('macellaio_admin_style_v38');
+                const storedS = localStorage.getItem('macellaio_admin_style_v40');
                 styleAtual = storedS ? JSON.parse(storedS) : DEFAULT_STYLE;
             } catch (e) { premiosAtuais = DEFAULT_PREMIOS; styleAtual = DEFAULT_STYLE; }
             aplicarEstilo(styleAtual); abrirAdmin(); return; 
         }
 
-        // CLIENTE
-        const encodedData = params.get('d');
-        if (encodedData) {
-            try { 
-                const data = JSON.parse(decodeURIComponent(atob(encodedData)));
-                premiosAtuais = data.premios || DEFAULT_PREMIOS;
-                styleAtual = data.style || DEFAULT_STYLE;
-            } catch(e) { premiosAtuais = DEFAULT_PREMIOS; styleAtual = DEFAULT_STYLE; }
-        } else {
-            premiosAtuais = DEFAULT_PREMIOS; styleAtual = DEFAULT_STYLE;
-        }
+        // CLIENTE (Link Curto -> Usa Default)
+        premiosAtuais = DEFAULT_PREMIOS;
+        styleAtual = DEFAULT_STYLE;
 
         aplicarEstilo(styleAtual);
         const campanha = params.get('c'); 
@@ -420,35 +407,12 @@
     };
 
     function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
-    
-    function abrirConfirmacaoResgate() { 
-        if(estado.premioFinal) {
-            document.getElementById('premio-resgate-nome').innerText = estado.premioFinal.nome;
-        }
-        document.getElementById('modal-confirm-resgate').classList.remove('hidden'); 
-    }
-    
-    function confirmarResgate() {
-        fecharModal('modal-confirm-resgate');
-        irResgate();
-    }
-
-    function abrirConfirmacaoGiro() { 
-        document.getElementById('premio-perdido-nome').innerText = estado.premioFinal ? estado.premioFinal.nome : "...";
-        document.getElementById('modal-confirm-spin').classList.remove('hidden'); 
-    }
-    function confirmarNovoGiro() {
-        fecharModal('modal-confirm-spin');
-        resetarJogo();
-    }
-
-    function abrirModalVip() {
-        document.getElementById('modal-vip-info').classList.remove('hidden');
-    }
-    function confirmarVip() {
-        if(styleAtual.vipUrl) window.location.href = styleAtual.vipUrl;
-        else alert("Link VIP não configurado pelo administrador.");
-    }
+    function abrirConfirmacaoResgate() { if(estado.premioFinal) document.getElementById('premio-resgate-nome').innerText = estado.premioFinal.nome; document.getElementById('modal-confirm-resgate').classList.remove('hidden'); }
+    function confirmarResgate() { fecharModal('modal-confirm-resgate'); irResgate(); }
+    function abrirConfirmacaoGiro() { document.getElementById('premio-perdido-nome').innerText = estado.premioFinal ? estado.premioFinal.nome : "..."; document.getElementById('modal-confirm-spin').classList.remove('hidden'); }
+    function confirmarNovoGiro() { fecharModal('modal-confirm-spin'); resetarJogo(); }
+    function abrirModalVip() { document.getElementById('modal-vip-info').classList.remove('hidden'); }
+    function confirmarVip() { if(styleAtual.vipUrl) window.location.href = styleAtual.vipUrl; else alert("Link VIP não configurado pelo administrador."); }
 
     function aplicarEstilo(style) {
         document.documentElement.style.setProperty('--gold', style.mainColor);
@@ -553,7 +517,6 @@
         document.getElementById('tela-jogo').classList.remove('ativa'); 
         document.getElementById('tela-bloqueio').classList.remove('ativa'); 
         renderAdminPremios(); 
-        
         document.getElementById('custom-title').value = styleAtual.title || "MACELLAIO REWARDS";
         document.getElementById('custom-bg-url').value = styleAtual.bgUrl;
         document.getElementById('custom-color-main').value = styleAtual.mainColor;
@@ -596,31 +559,36 @@
     
     function salvarConfigAdmin(){ 
         captureState(); 
-        localStorage.setItem('macellaio_admin_premios_v38', JSON.stringify(premiosAtuais)); 
-        localStorage.setItem('macellaio_admin_style_v38', JSON.stringify(styleAtual)); 
-        alert("Configuração Salva! O link gerado conterá essas cores e prêmios."); 
+        localStorage.setItem('macellaio_admin_premios_v40', JSON.stringify(premiosAtuais)); 
+        localStorage.setItem('macellaio_admin_style_v40', JSON.stringify(styleAtual)); 
+        alert("Configuração Salva no ADMIN! Lembre-se: O link curto usa o código DEFAULT_PREMIOS. Use 'COPIAR CONFIG' se quiser atualizar para todos."); 
+    }
+
+    function copiarJsonConfig() {
+        captureState();
+        // Gera apenas a array de objetos, formatada para colar no código
+        const json = JSON.stringify(premiosAtuais, null, 4);
+        navigator.clipboard.writeText(json).then(() => {
+            alert("JSON copiado! Agora abra o arquivo HTML, procure a variável 'DEFAULT_PREMIOS' e cole isso no lugar.");
+        });
     }
     
     function resetarMeuHistorico() {
         const nomeCampanha = document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase();
         if(!nomeCampanha) return alert("Digite o nome da campanha para resetar.");
-        
         localStorage.removeItem(`macellaio_user_${nomeCampanha}`);
-        alert(`Histórico da campanha '${nomeCampanha}' limpo neste navegador. Você pode testar novamente.`);
-        // Recarrega para aplicar
+        alert(`Histórico da campanha '${nomeCampanha}' limpo! Pode testar novamente.`);
         window.location.href = `${location.origin}${location.pathname}?c=${nomeCampanha}`;
     }
-
+    
     function gerarLink(){ 
         const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); 
         if(!n)return alert("Digite nome da campanha"); 
-        captureState();
-        const fullConfig = { premios: premiosAtuais, style: styleAtual };
-        const jsonConfig = JSON.stringify(fullConfig);
-        const encodedConfig = btoa(encodeURIComponent(jsonConfig)); 
-        const u=`${location.origin}${location.pathname}?c=${n}&d=${encodedConfig}`; 
+        
+        // Link Curto Limpo
+        const u=`${location.origin}${location.pathname}?c=${n}`; 
         document.getElementById('resultado-link').style.display='block'; 
-        document.getElementById('resultado-link').innerHTML=`Link Personalizado:<br><a href="${u}" style="color:#fff; word-break:break-all;">${u}</a>`; 
+        document.getElementById('resultado-link').innerHTML=`Link Curto:<br><a href="${u}" style="color:#fff; word-break:break-all;">${u}</a>`; 
     }
 
     function renderizarRoleta(){ const w=document.getElementById('roleta-wrapper'); w.innerHTML=''; const tot=premiosAtuais.length; const arc=360/tot; premiosAtuais.forEach((p,i)=>{ const s=document.createElement('div'); s.className='segmento'; const r=i*arc; const sk=90-arc; s.style.transform=`rotate(${r}deg) skewY(-${sk}deg)`; s.style.backgroundColor=p.cor; const c=document.createElement('div'); c.className='seg-conteudo'; c.style.transform=`skewY(${sk}deg) rotate(${arc/2}deg)`; c.innerHTML=`<span>${p.nome}</span>`; s.appendChild(c); w.appendChild(s); }); }
