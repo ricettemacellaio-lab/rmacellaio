@@ -56,6 +56,18 @@
         .btn-confirm { background: var(--gold); color: #000; }
         .btn-cancel { background: transparent; border: 1px solid #555; color: #fff; }
 
+        /* TELA DE CÓDIGO DE ACESSO */
+        #tela-codigo {
+            z-index: 150; /* Acima do jogo, abaixo de modais */
+            background: rgba(0,0,0,0.98);
+        }
+        .lock-icon { font-size: 3rem; margin-bottom: 20px; display: block; }
+        .input-code { 
+            background: #222; border: 2px solid var(--gold); color: #fff; 
+            padding: 15px; font-size: 1.2rem; text-align: center; letter-spacing: 3px; text-transform: uppercase;
+            border-radius: 8px; width: 100%; margin-bottom: 20px; outline: none;
+        }
+
         /* HEADER */
         .header-title { 
             color: var(--gold); font-size: 1.8rem; font-weight: 900; 
@@ -127,6 +139,17 @@
 
 <div id="app-container">
     <div id="fundo-overlay"></div>
+
+    <div id="tela-codigo" class="tela">
+        <div class="modal-box">
+            <span class="lock-icon">🔒</span>
+            <h2>Acesso Restrito</h2>
+            <p>Esta campanha é exclusiva. Digite o código de acesso para liberar sua roleta.</p>
+            <input type="text" id="input-codigo-acesso" class="input-code" placeholder="CÓDIGO">
+            <button class="btn-modal btn-confirm" onclick="verificarCodigoAcesso()">LIBERAR ACESSO</button>
+            <p id="msg-erro-codigo" style="color:var(--danger); margin-top:10px; display:none;">Código incorreto.</p>
+        </div>
+    </div>
 
     <div id="modal-tutorial" class="modal-overlay hidden">
         <div class="modal-box">
@@ -231,10 +254,10 @@
         <div class="header-title" style="font-size:1.2rem; margin-top:20px;">ADMINISTRAÇÃO</div>
         
         <div class="admin-section">
-            <h3>Prêmios, Cores & Pesos (Mestre)</h3>
-            <p style="font-size:0.7rem; color:#aaa;">⚠️ <strong>Dica:</strong> Se você alterar algo aqui, clique em "SALVAR TUDO" e <strong>RECARREGUE A PÁGINA</strong> para testar. O link curto sempre usará o que está no código <strong>DEFAULT_PREMIOS</strong> (edite o arquivo HTML para mudar para todos).</p>
+            <h3>Prêmios, Cores & Pesos</h3>
+            <p style="font-size:0.7rem; color:#aaa;">O link gerado HERDA estes dados.</p>
             
-            <button onclick="copiarJsonConfig()" class="btn-outline" style="width:100%; margin-bottom:15px; border-color:#fff; color:#fff;">📋 COPIAR CONFIG (JSON) PARA CÓDIGO</button>
+            <button onclick="copiarJsonConfig()" class="btn-outline" style="width:100%; margin-bottom:15px; border-color:#fff; color:#fff;">📋 COPIAR JSON PARA CÓDIGO</button>
 
             <div style="display:flex; gap:5px; font-size:0.7rem; color:#888; margin-bottom:5px;">
                 <span style="flex:2">NOME</span>
@@ -250,17 +273,20 @@
         </div>
 
         <div class="admin-section">
-            <h3>Links e Títulos</h3>
+            <h3>Segurança & Links</h3>
             <label style="color:#ccc; font-size:0.8rem;">Título:</label>
             <input type="text" id="custom-title" class="input-admin" oninput="previewCustomizations()">
             
+            <label style="color:var(--gold); font-size:0.8rem; margin-top:10px;">🔒 Código de Acesso (Opcional):</label>
+            <input type="text" id="custom-access-code" class="input-admin" placeholder="Ex: VIP2025 (Deixe vazio para livre)">
+
             <label style="color:#ccc; font-size:0.8rem; margin-top:10px;">Link "Resgatar Agora":</label>
             <input type="text" id="custom-redeem-url" class="input-admin" placeholder="https://seudelivery...">
 
             <label style="color:#ccc; font-size:0.8rem; margin-top:10px;">Link Grupo VIP (Opcional):</label>
             <input type="text" id="custom-vip-url" class="input-admin" placeholder="https://whatsapp...">
 
-            <label style="color:#ccc; font-size:0.8rem; margin-top:10px;">Áudio de Voz (Vitória) - URL MP3:</label>
+            <label style="color:#ccc; font-size:0.8rem; margin-top:10px;">Áudio de Voz (Vitória):</label>
             <input type="text" id="custom-voice-url" class="input-admin" placeholder="https://exemplo.com/voz.mp3">
 
             <label style="color:#ccc; font-size:0.8rem; margin-top:10px; display:block;">Fundo (URL):</label>
@@ -285,7 +311,7 @@
         <div class="admin-section">
             <h3>Gerar Campanha</h3>
             <input type="text" id="campanha-nome" class="input-admin" placeholder="Nome (ex: PROMO10)">
-            <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK CURTO</button>
+            <button onclick="gerarLink()" class="btn-gold" style="font-size:0.8rem; padding:10px; margin-top:10px;">GERAR LINK SEGURO</button>
             <div id="resultado-link" class="link-result"></div>
             
             <button onclick="resetarMeuHistorico()" class="btn-reset-test">RESETAR MEU USO (TESTE)</button>
@@ -295,57 +321,14 @@
 </div>
 
 <script>
-    /* ---------------- ENGINE DE ÁUDIO ---------------- */
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let spinOscillator = null, spinGain = null;
+    function startSpinSound(){ if(audioCtx.state==='suspended')audioCtx.resume();if(spinOscillator)return;spinOscillator=audioCtx.createOscillator();spinGain=audioCtx.createGain();spinOscillator.connect(spinGain);spinGain.connect(audioCtx.destination);spinOscillator.type='sawtooth';spinOscillator.frequency.setValueAtTime(50,audioCtx.currentTime);spinGain.gain.setValueAtTime(0.08,audioCtx.currentTime);spinOscillator.start();}
+    function stopSpinSound(){if(spinOscillator){spinGain.gain.linearRampToValueAtTime(0,audioCtx.currentTime+0.05);spinOscillator.stop(audioCtx.currentTime+0.05);spinOscillator=null;spinGain=null;}}
+    function playThud(){if(audioCtx.state==='suspended')audioCtx.resume();const o=audioCtx.createOscillator();const g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.frequency.value=120;g.gain.setValueAtTime(1.0,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.15);o.start();o.stop(audioCtx.currentTime+0.15);}
+    function playWin(){if(styleAtual.voiceUrl&&styleAtual.voiceUrl.trim()!==""){const v=new Audio(styleAtual.voiceUrl);v.volume=1.0;v.play().catch(e=>playSynthWin());}else{playSynthWin();}}
+    function playSynthWin(){const n=audioCtx.currentTime;[523,659,784,1046].forEach((f,i)=>{const o=audioCtx.createOscillator();const g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.frequency.value=f;g.gain.setValueAtTime(0,n+i*0.1);g.gain.linearRampToValueAtTime(0.2,n+i*0.1+0.1);g.gain.exponentialRampToValueAtTime(0.001,n+i*0.1+1.5);o.start(n+i*0.1);o.stop(n+i*0.1+1.5);});}
 
-    function startSpinSound() {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        if (spinOscillator) return; 
-        spinOscillator = audioCtx.createOscillator(); spinGain = audioCtx.createGain();
-        spinOscillator.connect(spinGain); spinGain.connect(audioCtx.destination);
-        spinOscillator.type = 'sawtooth'; spinOscillator.frequency.setValueAtTime(50, audioCtx.currentTime);
-        spinGain.gain.setValueAtTime(0.08, audioCtx.currentTime); spinOscillator.start();
-    }
-    function stopSpinSound() {
-        if (spinOscillator) {
-            spinGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
-            spinOscillator.stop(audioCtx.currentTime + 0.05); spinOscillator = null; spinGain = null;
-        }
-    }
-    function playThud() {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(120, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.15);
-        gain.gain.setValueAtTime(1.0, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-        osc.type = 'square'; osc.start(); osc.stop(audioCtx.currentTime + 0.15);
-    }
-    function playWin() {
-        if (styleAtual.voiceUrl && styleAtual.voiceUrl.trim() !== "") {
-            const voiceAudio = new Audio(styleAtual.voiceUrl);
-            voiceAudio.volume = 1.0;
-            voiceAudio.play().catch(e => {
-                console.log("Erro ao tocar voz (fallback):", e);
-                playSynthWin(); 
-            });
-        } else {
-            playSynthWin();
-        }
-    }
-    
-    function playSynthWin() {
-        const now = audioCtx.currentTime;
-        [523, 659, 784, 1046].forEach((f,i) => {
-            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-            o.connect(g); g.connect(audioCtx.destination); o.frequency.value = f;
-            g.gain.setValueAtTime(0, now+i*0.1); g.gain.linearRampToValueAtTime(0.2, now+i*0.1+0.1);
-            g.gain.exponentialRampToValueAtTime(0.001, now+i*0.1+1.5); o.start(now+i*0.1); o.stop(now+i*0.1+1.5);
-        });
-    }
-
-    /* ---------------- DADOS E INICIALIZAÇÃO ---------------- */
-    // --- COLE O JSON AQUI PARA MUDAR O PADRÃO PARA TODOS OS LINKS CURTOS ---
     const DEFAULT_PREMIOS = [
         { nome: "Mais um Steak", cupom: "01STEAK", cor: "#d32f2f", peso: 20 }, 
         { nome: "Frete Grátis", cupom: "RMFRETE", cor: "#8e24aa", peso: 20 },
@@ -363,56 +346,84 @@
         font: "'Roboto', sans-serif",
         vipUrl: "https://chat.whatsapp.com/CfXx46ntuqiCIpq51jP24Z",
         redeemUrl: "https://www.rmacellaio.com.br",
-        voiceUrl: "https://ricettemacellaio-lab.github.io/rmacellaio/assets/voz-vitoria.mp3"
+        voiceUrl: "https://ricettemacellaio-lab.github.io/rmacellaio/assets/voz-vitoria.mp3",
+        accessCode: "" // Novo campo de senha
     };
     
     let premiosAtuais, styleAtual, estado = { campanha: null, giros: 0, maxGiros: 3, resgatado: false, premioFinal: null, dataResgate: null };
-    let rotationAngle = 0, velocity = 0, mode = 'IDLE', animFrame = null, targetPrizeIndex = -1, segredoClicks = 0;
-    let flyingFrames = 0;
+    let rotationAngle = 0, velocity = 0, mode = 'IDLE', animFrame = null, targetPrizeIndex = -1, segredoClicks = 0, flyingFrames = 0;
 
     window.onload = function() {
         const params = new URLSearchParams(window.location.search);
         
-        // ADMIN
         if (params.get('admin') === '1' || params.get('admin') === 'true') { 
             try { 
-                const storedP = localStorage.getItem('macellaio_admin_premios_v40');
+                const storedP = localStorage.getItem('macellaio_admin_premios_v41');
                 premiosAtuais = storedP ? JSON.parse(storedP) : DEFAULT_PREMIOS;
-                const storedS = localStorage.getItem('macellaio_admin_style_v40');
+                const storedS = localStorage.getItem('macellaio_admin_style_v41');
                 styleAtual = storedS ? JSON.parse(storedS) : DEFAULT_STYLE;
             } catch (e) { premiosAtuais = DEFAULT_PREMIOS; styleAtual = DEFAULT_STYLE; }
             aplicarEstilo(styleAtual); abrirAdmin(); return; 
         }
 
-        // CLIENTE (Link Curto -> Usa Default)
-        premiosAtuais = DEFAULT_PREMIOS;
-        styleAtual = DEFAULT_STYLE;
+        const encodedData = params.get('d');
+        if (encodedData) {
+            try { 
+                const data = JSON.parse(decodeURIComponent(atob(encodedData)));
+                premiosAtuais = data.premios || DEFAULT_PREMIOS;
+                styleAtual = data.style || DEFAULT_STYLE;
+            } catch(e) { premiosAtuais = DEFAULT_PREMIOS; styleAtual = DEFAULT_STYLE; }
+        } else {
+            premiosAtuais = DEFAULT_PREMIOS; styleAtual = DEFAULT_STYLE;
+        }
 
         aplicarEstilo(styleAtual);
         const campanha = params.get('c'); 
         if (!campanha) { mostrarTela('tela-bloqueio'); return; }
+        estado.campanha = campanha;
         
-        estado.campanha = campanha; 
-        carregarEstadoUsuario();
-        
-        const temEstado = localStorage.getItem(getKey());
-        if(!temEstado) {
-            document.getElementById('modal-tutorial').classList.remove('hidden');
+        // --- VERIFICAÇÃO DE CÓDIGO (TRAVA) ---
+        if (styleAtual.accessCode && styleAtual.accessCode.trim() !== "") {
+            // Verifica se já desbloqueou essa campanha
+            if (!localStorage.getItem(`unlocked_${campanha}`)) {
+                mostrarTela('tela-codigo');
+                return; // Para aqui até desbloquear
+            }
         }
+        
+        iniciarApp();
+    };
 
+    function verificarCodigoAcesso() {
+        const input = document.getElementById('input-codigo-acesso').value.toUpperCase();
+        const code = styleAtual.accessCode.toUpperCase();
+        
+        if (input === code) {
+            localStorage.setItem(`unlocked_${estado.campanha}`, 'true');
+            iniciarApp();
+        } else {
+            document.getElementById('msg-erro-codigo').style.display = 'block';
+        }
+    }
+
+    function iniciarApp() {
+        carregarEstadoUsuario();
+        const temEstado = localStorage.getItem(getKey());
+        if(!temEstado) document.getElementById('modal-tutorial').classList.remove('hidden');
         if (estado.resgatado || (estado.giros >= estado.maxGiros && estado.premioFinal)) {
             if(!estado.resgatado) { estado.resgatado = true; if(!estado.dataResgate) estado.dataResgate = new Date().toISOString(); salvarEstadoUsuario(); }
             montarTelaResgate(); mostrarTela('tela-resgate');
         } else { renderizarRoleta(); atualizarUI(); mostrarTela('tela-jogo'); }
-    };
+    }
 
+    /* FUNÇÕES UI E LÓGICA (IGUAIS AO ANTERIOR, SÓ REFERENCIANDO) */
     function fecharModal(id) { document.getElementById(id).classList.add('hidden'); }
     function abrirConfirmacaoResgate() { if(estado.premioFinal) document.getElementById('premio-resgate-nome').innerText = estado.premioFinal.nome; document.getElementById('modal-confirm-resgate').classList.remove('hidden'); }
     function confirmarResgate() { fecharModal('modal-confirm-resgate'); irResgate(); }
     function abrirConfirmacaoGiro() { document.getElementById('premio-perdido-nome').innerText = estado.premioFinal ? estado.premioFinal.nome : "..."; document.getElementById('modal-confirm-spin').classList.remove('hidden'); }
     function confirmarNovoGiro() { fecharModal('modal-confirm-spin'); resetarJogo(); }
     function abrirModalVip() { document.getElementById('modal-vip-info').classList.remove('hidden'); }
-    function confirmarVip() { if(styleAtual.vipUrl) window.location.href = styleAtual.vipUrl; else alert("Link VIP não configurado pelo administrador."); }
+    function confirmarVip() { if(styleAtual.vipUrl) window.location.href = styleAtual.vipUrl; else alert("Link VIP não configurado."); }
 
     function aplicarEstilo(style) {
         document.documentElement.style.setProperty('--gold', style.mainColor);
@@ -421,176 +432,33 @@
         if(style.title) { document.getElementById('display-title').innerText = style.title; document.title = style.title; }
         if(style.bgUrl && style.bgUrl.trim() !== "") document.getElementById('fundo-overlay').style.backgroundImage = `url('${style.bgUrl}')`;
         else document.getElementById('fundo-overlay').style.backgroundImage = 'none';
-        
         document.getElementById('btn-resgate-link').href = style.redeemUrl || "https://www.rmacellaio.com.br";
-        
         const btnVipTrigger = document.getElementById('btn-vip-trigger');
-        if(style.vipUrl && style.vipUrl.trim() !== "") {
-            btnVipTrigger.classList.remove('hidden');
-        } else {
-            btnVipTrigger.classList.add('hidden');
-        }
+        if(style.vipUrl && style.vipUrl.trim() !== "") btnVipTrigger.classList.remove('hidden'); else btnVipTrigger.classList.add('hidden');
     }
 
-    /* ---------------- LÓGICA DO JOGO ---------------- */
-    function iniciarGiroMotor() {
-        if(estado.giros >= estado.maxGiros) return;
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-        document.getElementById('btn-girar').classList.add('hidden'); document.getElementById('btn-arremessar').classList.remove('hidden');
-        mode = 'MOTOR'; velocity = 0; loopFisica(); startSpinSound();
-    }
+    function iniciarGiroMotor(){ if(estado.giros>=estado.maxGiros)return; if(audioCtx.state==='suspended')audioCtx.resume(); document.getElementById('btn-girar').classList.add('hidden'); document.getElementById('btn-arremessar').classList.remove('hidden'); mode='MOTOR'; velocity=0; loopFisica(); startSpinSound(); }
+    function arremessarDardo(){ if(mode!=='MOTOR')return; document.getElementById('btn-arremessar').classList.add('hidden'); const p=document.getElementById('projectile-dart'); p.style.display='block'; p.classList.add('flying-dart-anim'); let tp=premiosAtuais.reduce((s,x)=>s+(parseInt(x.peso)||0),0); let r=Math.random()*tp; let c=0; targetPrizeIndex=0; if(tp>0){for(let i=0;i<premiosAtuais.length;i++){c+=(parseInt(premiosAtuais[i].peso)||0);if(r<c){targetPrizeIndex=i;break;}}}else{targetPrizeIndex=Math.floor(Math.random()*premiosAtuais.length);} const arc=360/premiosAtuais.length; const cAng=(targetPrizeIndex*arc)+(arc/2); let tRot=360-cAng; const cMod=rotationAngle%360; let diff=tRot-cMod; if(diff<0)diff+=360; const frames=22; const dist=diff+360; velocity=dist/frames; flyingFrames=22; mode='FLYING'; }
+    function impactoDardo(){ mode='FINISHED'; stopSpinSound(); playThud(); document.getElementById('projectile-dart').style.display='none'; const dp=document.getElementById('dardo-preso'); dp.style.display='block'; const arc=360/premiosAtuais.length; const cAng=(targetPrizeIndex*arc)+(arc/2); rotationAngle=360-cAng; document.getElementById('roleta-wrapper').style.transform=`rotate(${rotationAngle}deg)`; finalizarJogo(); }
+    function loopFisica(){ if(mode==='IDLE'||mode==='FINISHED')return; if(mode==='MOTOR'){ if(velocity<25)velocity+=0.8; rotationAngle+=velocity; } else if(mode==='FLYING'){ rotationAngle+=velocity; flyingFrames--; if(flyingFrames<=0)impactoDardo(); } document.getElementById('roleta-wrapper').style.transform=`rotate(${rotationAngle}deg)`; animFrame=requestAnimationFrame(loopFisica); }
+    function finalizarJogo(){ cancelAnimationFrame(animFrame); playWin(); const prz=premiosAtuais[targetPrizeIndex]; setTimeout(()=>{ estado.giros++; if(!prz.cupom||prz.cupom.trim()===""){ document.getElementById('txt-premio-atual').innerText="Não foi dessa vez!"; estado.premioFinal=null; } else{ estado.premioFinal=prz; document.getElementById('txt-premio-atual').innerText=prz.nome; } salvarEstadoUsuario(); atualizarUI(); document.getElementById('msg-resultado').classList.remove('hidden'); if(estado.giros>=estado.maxGiros){ document.getElementById('btn-girar-dnv').classList.add('hidden'); if(!estado.premioFinal)document.getElementById('btn-resgatar-home').classList.add('hidden'); } },800); }
+    function resetarJogo(){ if(estado.giros>=estado.maxGiros)return; document.getElementById('msg-resultado').classList.add('hidden'); document.getElementById('btn-girar').classList.remove('hidden'); document.getElementById('dardo-preso').style.display='none'; document.getElementById('projectile-dart').classList.remove('flying-dart-anim'); }
 
-    function arremessarDardo() {
-        if (mode !== 'MOTOR') return;
-        document.getElementById('btn-arremessar').classList.add('hidden');
-        const projectile = document.getElementById('projectile-dart'); 
-        projectile.style.display = 'block'; projectile.classList.add('flying-dart-anim');
-        
-        let totalPeso = premiosAtuais.reduce((s, p) => s + (parseInt(p.peso) || 0), 0);
-        let r = Math.random() * totalPeso;
-        let cursor = 0; targetPrizeIndex = 0;
-        
-        if (totalPeso > 0) {
-            for(let i=0; i<premiosAtuais.length; i++) { 
-                cursor += (parseInt(premiosAtuais[i].peso) || 0); 
-                if(r < cursor) { targetPrizeIndex = i; break; } 
-            }
-        } else {
-            targetPrizeIndex = Math.floor(Math.random() * premiosAtuais.length);
-        }
-
-        const segArc = 360 / premiosAtuais.length; 
-        const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
-        let targetRotation = 360 - centerSegAngle; 
-        
-        const currentMod = rotationAngle % 360; 
-        let diff = targetRotation - currentMod; 
-        if (diff < 0) diff += 360; 
-        
-        const framesToImpact = 22; 
-        const distanceNeeded = diff + 360; 
-        velocity = distanceNeeded / framesToImpact; 
-        flyingFrames = 22;
-        mode = 'FLYING';
+    /* ADMIN & UTILS */
+    function verificarSegredo(){ segredoClicks++; if(segredoClicks>=5){ alert("Admin!"); abrirAdmin(); }}
+    function abrirAdmin(){ document.getElementById('tela-admin').classList.add('ativa'); document.getElementById('tela-jogo').classList.remove('ativa'); document.getElementById('tela-bloqueio').classList.remove('ativa'); renderAdminPremios(); 
+        document.getElementById('custom-title').value=styleAtual.title; document.getElementById('custom-bg-url').value=styleAtual.bgUrl; document.getElementById('custom-color-main').value=styleAtual.mainColor; document.getElementById('custom-color-bg').value=styleAtual.bgColor; document.getElementById('custom-font').value=styleAtual.font; document.getElementById('custom-vip-url').value=styleAtual.vipUrl; document.getElementById('custom-redeem-url').value=styleAtual.redeemUrl; document.getElementById('custom-voice-url').value=styleAtual.voiceUrl;
+        document.getElementById('custom-access-code').value=styleAtual.accessCode || ""; 
     }
-
-    function impactoDardo() {
-        mode = 'FINISHED'; stopSpinSound(); playThud();
-        document.getElementById('projectile-dart').style.display = 'none';
-        const dardoPreso = document.getElementById('dardo-preso'); dardoPreso.style.display = 'block';
-        const segArc = 360 / premiosAtuais.length;
-        const centerSegAngle = (targetPrizeIndex * segArc) + (segArc/2);
-        rotationAngle = 360 - centerSegAngle;
-        document.getElementById('roleta-wrapper').style.transform = `rotate(${rotationAngle}deg)`;
-        finalizarJogo();
-    }
-
-    function loopFisica() {
-        if (mode === 'IDLE' || mode === 'FINISHED') return;
-        if (mode === 'MOTOR') { if (velocity < 25) velocity += 0.8; rotationAngle += velocity; }
-        else if (mode === 'FLYING') { rotationAngle += velocity; flyingFrames--; if (flyingFrames <= 0) impactoDardo(); }
-        document.getElementById('roleta-wrapper').style.transform = `rotate(${rotationAngle}deg)`;
-        animFrame = requestAnimationFrame(loopFisica);
-    }
-
-    function finalizarJogo() {
-        cancelAnimationFrame(animFrame); playWin();
-        const premio = premiosAtuais[targetPrizeIndex]; 
-        setTimeout(() => {
-            estado.giros++;
-            if (!premio.cupom || premio.cupom.trim() === "") { document.getElementById('txt-premio-atual').innerText = "Não foi dessa vez!"; estado.premioFinal = null; } else { estado.premioFinal = premio; document.getElementById('txt-premio-atual').innerText = premio.nome; }
-            salvarEstadoUsuario(); atualizarUI(); document.getElementById('msg-resultado').classList.remove('hidden');
-            if (estado.giros >= estado.maxGiros) { document.getElementById('btn-girar-dnv').classList.add('hidden'); if (!estado.premioFinal) document.getElementById('btn-resgatar-home').classList.add('hidden'); }
-        }, 800);
-    }
-    
-    function resetarJogo() {
-        if(estado.giros >= estado.maxGiros) return;
-        document.getElementById('msg-resultado').classList.add('hidden'); document.getElementById('btn-girar').classList.remove('hidden');
-        document.getElementById('dardo-preso').style.display = 'none'; document.getElementById('projectile-dart').classList.remove('flying-dart-anim');
-    }
-
-    /* ---------------- ADMIN & CUSTOMIZAÇÃO ---------------- */
-    function verificarSegredo() { segredoClicks++; if(segredoClicks >= 5) { alert("Acesso Admin!"); abrirAdmin(); }}
-    function abrirAdmin() { 
-        document.getElementById('tela-admin').classList.add('ativa'); 
-        document.getElementById('tela-jogo').classList.remove('ativa'); 
-        document.getElementById('tela-bloqueio').classList.remove('ativa'); 
-        renderAdminPremios(); 
-        document.getElementById('custom-title').value = styleAtual.title || "MACELLAIO REWARDS";
-        document.getElementById('custom-bg-url').value = styleAtual.bgUrl;
-        document.getElementById('custom-color-main').value = styleAtual.mainColor;
-        document.getElementById('custom-color-bg').value = styleAtual.bgColor;
-        document.getElementById('custom-font').value = styleAtual.font;
-        document.getElementById('custom-vip-url').value = styleAtual.vipUrl || "";
-        document.getElementById('custom-redeem-url').value = styleAtual.redeemUrl || "";
-        document.getElementById('custom-voice-url').value = styleAtual.voiceUrl || "";
-    }
-    
-    function renderAdminPremios() { 
-        const l = document.getElementById('lista-premios'); l.innerHTML=''; 
-        premiosAtuais.forEach((p,i)=>{ 
-            const d=document.createElement('div'); d.className='premio-row'; 
-            d.innerHTML=`<input type="text" class="input-admin col-nome" value="${p.nome}" id="n-${i}"><input type="text" class="input-admin col-cupom" value="${p.cupom}" id="c-${i}"><input type="color" class="color-input" value="${p.cor}" id="k-${i}"><input type="number" class="input-admin col-peso" value="${p.peso}" id="p-${i}"><button class="btn-remove" onclick="rmP(${i})">X</button>`; 
-            l.appendChild(d); 
-        }); 
-    }
+    function renderAdminPremios(){ const l=document.getElementById('lista-premios'); l.innerHTML=''; premiosAtuais.forEach((p,i)=>{ const d=document.createElement('div'); d.className='premio-row'; d.innerHTML=`<input type="text" class="input-admin col-nome" value="${p.nome}" id="n-${i}"><input type="text" class="input-admin col-cupom" value="${p.cupom}" id="c-${i}"><input type="color" class="color-input" value="${p.cor}" id="k-${i}"><input type="number" class="input-admin col-peso" value="${p.peso}" id="p-${i}"><button class="btn-remove" onclick="rmP(${i})">X</button>`; l.appendChild(d); }); }
     function adicionarPremio(){ captureState(); premiosAtuais.push({nome:"",cupom:"",peso:0,cor:"#333333"}); renderAdminPremios(); }
-    function rmP(i){ if(premiosAtuais.length<=2)return; if(confirm("Remover?")){ captureState(); premiosAtuais.splice(i,1); renderAdminPremios(); } }
-    
-    function captureState(){ 
-        premiosAtuais.forEach((p,i)=>{ 
-            const n=document.getElementById(`n-${i}`); if(n) p.nome=n.value; 
-            const c=document.getElementById(`c-${i}`); if(c) p.cupom=c.value; 
-            const k=document.getElementById(`k-${i}`); if(k) p.cor=k.value;
-            const w=document.getElementById(`p-${i}`); let wVal = parseInt(w.value); if(isNaN(wVal)) wVal = 0; p.peso = wVal; 
-        });
-        styleAtual.title = document.getElementById('custom-title').value;
-        styleAtual.bgUrl = document.getElementById('custom-bg-url').value;
-        styleAtual.mainColor = document.getElementById('custom-color-main').value;
-        styleAtual.bgColor = document.getElementById('custom-color-bg').value;
-        styleAtual.font = document.getElementById('custom-font').value;
-        styleAtual.vipUrl = document.getElementById('custom-vip-url').value;
-        styleAtual.redeemUrl = document.getElementById('custom-redeem-url').value;
-        styleAtual.voiceUrl = document.getElementById('custom-voice-url').value;
-    }
-    
+    function rmP(i){ if(premiosAtuais.length<=2)return; if(confirm("Rm?")){ captureState(); premiosAtuais.splice(i,1); renderAdminPremios(); } }
+    function captureState(){ premiosAtuais.forEach((p,i)=>{ const n=document.getElementById(`n-${i}`); if(n)p.nome=n.value; const c=document.getElementById(`c-${i}`); if(c)p.cupom=c.value; const k=document.getElementById(`k-${i}`); if(k)p.cor=k.value; const w=document.getElementById(`p-${i}`); let wv=parseInt(w.value); if(isNaN(wv))wv=0; p.peso=wv; }); styleAtual.title=document.getElementById('custom-title').value; styleAtual.bgUrl=document.getElementById('custom-bg-url').value; styleAtual.mainColor=document.getElementById('custom-color-main').value; styleAtual.bgColor=document.getElementById('custom-color-bg').value; styleAtual.font=document.getElementById('custom-font').value; styleAtual.vipUrl=document.getElementById('custom-vip-url').value; styleAtual.redeemUrl=document.getElementById('custom-redeem-url').value; styleAtual.voiceUrl=document.getElementById('custom-voice-url').value; styleAtual.accessCode=document.getElementById('custom-access-code').value; }
     function previewCustomizations() { captureState(); aplicarEstilo(styleAtual); }
-    
-    function salvarConfigAdmin(){ 
-        captureState(); 
-        localStorage.setItem('macellaio_admin_premios_v40', JSON.stringify(premiosAtuais)); 
-        localStorage.setItem('macellaio_admin_style_v40', JSON.stringify(styleAtual)); 
-        alert("Configuração Salva no ADMIN! Lembre-se: O link curto usa o código DEFAULT_PREMIOS. Use 'COPIAR CONFIG' se quiser atualizar para todos."); 
-    }
-
-    function copiarJsonConfig() {
-        captureState();
-        // Gera apenas a array de objetos, formatada para colar no código
-        const json = JSON.stringify(premiosAtuais, null, 4);
-        navigator.clipboard.writeText(json).then(() => {
-            alert("JSON copiado! Agora abra o arquivo HTML, procure a variável 'DEFAULT_PREMIOS' e cole isso no lugar.");
-        });
-    }
-    
-    function resetarMeuHistorico() {
-        const nomeCampanha = document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase();
-        if(!nomeCampanha) return alert("Digite o nome da campanha para resetar.");
-        localStorage.removeItem(`macellaio_user_${nomeCampanha}`);
-        alert(`Histórico da campanha '${nomeCampanha}' limpo! Pode testar novamente.`);
-        window.location.href = `${location.origin}${location.pathname}?c=${nomeCampanha}`;
-    }
-    
-    function gerarLink(){ 
-        const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); 
-        if(!n)return alert("Digite nome da campanha"); 
-        
-        // Link Curto Limpo
-        const u=`${location.origin}${location.pathname}?c=${n}`; 
-        document.getElementById('resultado-link').style.display='block'; 
-        document.getElementById('resultado-link').innerHTML=`Link Curto:<br><a href="${u}" style="color:#fff; word-break:break-all;">${u}</a>`; 
-    }
-
+    function salvarConfigAdmin(){ captureState(); localStorage.setItem('macellaio_admin_premios_v41', JSON.stringify(premiosAtuais)); localStorage.setItem('macellaio_admin_style_v41', JSON.stringify(styleAtual)); alert("Salvo!"); }
+    function copiarJsonConfig() { captureState(); const json=JSON.stringify(premiosAtuais,null,4); navigator.clipboard.writeText(json).then(()=>alert("JSON Copiado!")); }
+    function resetarMeuHistorico() { const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); if(!n)return alert("Nome?"); localStorage.removeItem(`macellaio_user_${n}`); localStorage.removeItem(`unlocked_${n}`); alert("Resetado!"); window.location.href=`${location.origin}${location.pathname}?c=${n}`; }
+    function gerarLink(){ const n=document.getElementById('campanha-nome').value.replace(/\s/g,'').toUpperCase(); if(!n)return alert("Nome?"); captureState(); const full={premios:premiosAtuais,style:styleAtual}; const json=JSON.stringify(full); const enc=btoa(encodeURIComponent(json)); const u=`${location.origin}${location.pathname}?c=${n}&d=${enc}`; document.getElementById('resultado-link').style.display='block'; document.getElementById('resultado-link').innerHTML=`Link Seguro:<br><a href="${u}" style="color:#fff; word-break:break-all;">${u}</a>`; }
     function renderizarRoleta(){ const w=document.getElementById('roleta-wrapper'); w.innerHTML=''; const tot=premiosAtuais.length; const arc=360/tot; premiosAtuais.forEach((p,i)=>{ const s=document.createElement('div'); s.className='segmento'; const r=i*arc; const sk=90-arc; s.style.transform=`rotate(${r}deg) skewY(-${sk}deg)`; s.style.backgroundColor=p.cor; const c=document.createElement('div'); c.className='seg-conteudo'; c.style.transform=`skewY(${sk}deg) rotate(${arc/2}deg)`; c.innerHTML=`<span>${p.nome}</span>`; s.appendChild(c); w.appendChild(s); }); }
     function irResgate(){ if(!estado.premioFinal)return; estado.resgatado=true; estado.dataResgate=new Date().toISOString(); salvarEstadoUsuario(); montarTelaResgate(); mostrarTela('tela-resgate'); }
     function montarTelaResgate(){ const p=estado.premioFinal; document.getElementById('resgate-nome').innerText=p.nome; document.getElementById('resgate-cupom').innerText=p.cupom; const d=new Date(estado.dataResgate); d.setDate(d.getDate()+7); document.getElementById('resgate-data').innerText=d.toLocaleDateString('pt-BR'); }
