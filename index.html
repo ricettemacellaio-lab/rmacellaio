@@ -76,8 +76,17 @@
         #projectile-dart { position: absolute; bottom: -150px; left: 50%; transform: translateX(-50%) rotate(180deg); font-size: 80px; z-index: 30; display: none; pointer-events: none; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5)); }
         @keyframes dartTrajectoryCenter { 0% { bottom: -150px; transform: translateX(-50%) scale(1.0); opacity: 1; } 100% { bottom: 140px; transform: translateX(-50%) scale(0.9); opacity: 1; } }
         .flying-dart-anim { animation: dartTrajectoryCenter 0.35s cubic-bezier(0.2, 0.8, 0.4, 1) forwards; }
+        
         #dardo-preso { position: absolute; top: 48%; left: 50%; width: 0; height: 0; z-index: 35; display: none; pointer-events: none; }
-        #dardo-preso::after { content: '🎯'; font-size: 70px; position: absolute; top: -42px; left: -35px; filter: drop-shadow(0 5px 8px rgba(0,0,0,0.6)); }
+        /* AJUSTE SOLICITADO NO DARDO PRESO */
+        #dardo-preso::after { 
+            content: '🎯'; 
+            font-size: 40px; 
+            position: absolute; 
+            top: -158px; 
+            left: -04px; 
+            filter: drop-shadow(0 5px 8px rgba(0,0,0,0.6)); 
+        }
 
         /* BOTÕES */
         .btn-gold { background: var(--gold); color: #000; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; border: none; padding: 18px 0; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(0,0,0,0.4); width: 85%; max-width: 300px; transition: transform 0.1s; position: relative; z-index: 101; }
@@ -207,7 +216,9 @@
             <p style="font-size:0.8rem; color:#fff; margin-bottom:20px;">Válido até: <span id="resgate-data"></span></p>
             
             <button onclick="copiarCodigo()" class="btn-gold" style="width:100%; margin-bottom:10px;">COPIAR CÓDIGO</button>
+            
             <a id="btn-resgate-link" href="#" target="_blank" class="btn-gold" style="background:#333; color:#fff; width:100%; line-height:50px; padding:0;">RESGATAR AGORA</a>
+            
             <button id="btn-vip-trigger" onclick="abrirModalVip()" class="btn-vip-action hidden">CLUBE VIP (Conheça os benefícios)</button>
 
             <div class="aviso-legal" style="color:#fff;">Atenção: Este prêmio é único e vinculado ao seu cadastro.</div>
@@ -347,9 +358,9 @@
         mainColor: '#FFC107',
         bgColor: '#0f0f0f',
         font: "'Roboto', sans-serif",
-        vipUrl: "",
+        vipUrl: "https://chat.whatsapp.com/CfXx46ntuqiCIpq51jP24Z",
         redeemUrl: "https://www.rmacellaio.com.br",
-        voiceUrl: ""
+        voiceUrl: "https://ricettemacellaio-lab.github.io/rmacellaio/assets/voz-vitoria.mp3"
     };
     
     let premiosAtuais, styleAtual, estado = { campanha: null, giros: 0, maxGiros: 3, resgatado: false, premioFinal: null, dataResgate: null };
